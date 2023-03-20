@@ -78,7 +78,7 @@ public class Game extends JFrame {
 		
 		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
 		gui.LoginScreen();
-		save.LoadSettings();
+        save.LoadSettings();
 		GameLoop();
 	}
 
@@ -133,5 +133,7 @@ public class Game extends JFrame {
 	}
 	
 	/**Starts a new game when launched.*/
-	public static void main(String args[]) throws Exception {new Game();}
+	public static void main(String args[]) throws Exception {
+        new Game();
+    }
 }

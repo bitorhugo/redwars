@@ -3,17 +3,21 @@ package edu.ufp.inf.sd.rmi.red.client;
 import edu.ufp.inf.sd.rmi.red.client.login.LoginPanel;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
+import engine.Game;
+import engine.Gui;
+
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
+import java.awt.GridBagLayout;
 
 /**
  * @author Vitor Santos
  */
-public class RedClient extends javax.swing.JFrame {
+public class RedClient {
     // RedClient is the base Frame of GUI
 
     private SetupContextRMI contextRMI;
@@ -23,25 +27,21 @@ public class RedClient extends javax.swing.JFrame {
     public RedClient (String args[]) {
         this.initContext(args);
         this.lookup();
-        this.initComponents();
+        this.startGame();
     }
 
     /**
      * Sets up the frame and calls first panel
      */
-    private void initComponents() {
-        this.setSize(400, 400);
-        this.setLayout(new GridBagLayout());
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLocationRelativeTo(null);
-        this.setVisible(true);
-
-        // call login panel
-        this.add(new LoginPanel());
-
-        // display frame
-        this.pack();
+    private void startGame() {
+        // this.setSize(400, 400);
+        // this.setLayout(new GridBagLayout());
+        // this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // this.setLocationRelativeTo(null);
+        // this.setVisible(true);
+        new Game();
     }
+
     
     private void initContext(String args[]) {
         try {
@@ -72,16 +72,17 @@ public class RedClient extends javax.swing.JFrame {
     }
     
     public static void main(final String[] args) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if (args.length >= 3) {
-                    new RedClient(args);
-                } else {
-                    System.out.println(RedClient.class + ": call must have the following args: <rmi_ip> <rmi_port> <rmi_service_prefix>");
-                }
-            }
-        });
+        new RedClient(args);
+        // java.awt.EventQueue.invokeLater(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         if (args.length >= 3) {
+        //             new RedClient(args);
+        //         } else {
+        //             System.out.println(RedClient.class + ": call must have the following args: <rmi_ip> <rmi_port> <rmi_service_prefix>");
+        //         }
+        //     }
+        // });
     }
 }
 

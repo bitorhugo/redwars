@@ -80,7 +80,9 @@ public class StartMenu implements ActionListener {
 
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
-		if (s==New) {new PlayerSelection(maps_list.getSelectedValue()+"");}
+		if (s==New) {
+            new PlayerSelection(maps_list.getSelectedValue()+"");
+        }
 		else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {Game.error.ShowError("Online features are not added yet.");}
 		else if (s==Editor) {
