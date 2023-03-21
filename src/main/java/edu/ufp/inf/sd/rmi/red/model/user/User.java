@@ -19,21 +19,21 @@ public class User implements Serializable {
     /**
      * @return the uname
      */
-    public String getUname() {
+    public String getUsername() {
         return this.username;
     }
 
     /**
      * @param uname the uname to set
      */
-    public void setUname(String uname) {
-        this.username = uname;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     /**
      * @return the pword
      */
-    public String getPword() {
+    public String getSecret() {
         return this.secret;
     }
 
@@ -61,6 +61,6 @@ public class User implements Serializable {
 
     @Override
     public String toString() {
-        return "User{" + "uname=" + username + ", secret=" + this.secret + "}";
+        return "User{" + "username=" + username + ", secret=" + this.secret + "}";
     }
 }
