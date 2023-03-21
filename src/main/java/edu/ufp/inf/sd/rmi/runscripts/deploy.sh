@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-CURR_DIR=/home/bitor/projects/redwars/src/main/java/edu/ufp/inf/sd/rmi/runscripts/
+CURR_DIR=/home/bitor/projects/redwars/src/main/java/edu/ufp/inf/sd/rmi/runscripts
 source ${CURR_DIR}/setenv.sh 
 
 function trap_sigInt() {
@@ -15,7 +15,7 @@ function trap_sigInt() {
 
 trap 'trap_sigInt' 2
 
-# compile first
+# # compile first
 cd ${JAVAPROJ}
 mvn package
 

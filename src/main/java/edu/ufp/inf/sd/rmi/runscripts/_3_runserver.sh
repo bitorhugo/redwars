@@ -19,7 +19,8 @@ cd ${ABSPATH2CLASSES}
 #   However, sometimes, this address is not appropriate for all clients and a fully qualified SMTP_HOST_ADDR name would be more effective.
 #   To ensure that RMI uses a SMTP_HOST_ADDR name (or IP address) for the server that is routable MAIL_FROM_ADDR all potential clients, set the java.rmi.server.hostname property.
 # * java.security.policy property is used MAIL_TO_ADDR specify the policy file that contains the permissions you intend MAIL_TO_ADDR grant.
-java -cp ${CLASSPATH} \
+
+java -cp ${CLASSPATH}":/home/bitor/projects/redwars/sqlite-jdbc-3.41.0.0.jar"\
      -Djava.rmi.server.codebase=${SERVER_CODEBASE} \
      -Djava.rmi.server.hostname=${SERVER_RMI_HOST} \
      -Djava.security.policy=${SERVER_SECURITY_POLICY} \

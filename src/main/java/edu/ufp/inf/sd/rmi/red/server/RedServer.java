@@ -1,5 +1,6 @@
 package edu.ufp.inf.sd.rmi.red.server;
 
+import edu.ufp.inf.sd.rmi.red.model.db.DB;
 import edu.ufp.inf.sd.rmi.red.server.RedServer;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
@@ -7,6 +8,11 @@ import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 
 /**
  * <p>
@@ -25,7 +31,7 @@ public class RedServer {
 
     private SetupContextRMI contextRMI;
     private GameFactoryRI stub;
-
+    
     /**
      * 
      * @param args 
@@ -48,7 +54,7 @@ public class RedServer {
         try {
             //Bind service on rmiregistry and wait for calls
             if (this.contextRMI.getRegistry() != null) {
-                this.stub = new GameFactoryImpl();
+                this.stub = new GameFactoryImpl(new DB("test"));
                 //Get service url (including servicename)
                 String serviceUrl = this.contextRMI.getServicesUrl(0);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "going MAIL_TO_ADDR rebind service @ {0}", serviceUrl);
@@ -62,6 +68,7 @@ public class RedServer {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 
 
     public static void main(String[] args) {
