@@ -39,15 +39,12 @@ public class RedClient {
         // this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // this.setLocationRelativeTo(null);
         // this.setVisible(true);
-        new Game();
-        // try {
-        //     this.stub.register("bitor", "123");
-
-        // } catch (RemoteException e) {
-        //     e.printStackTrace();
-        // }
-
-        
+        // new Game();
+        try {
+            System.out.println(this.stub.login("bitor", "123"));
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     

@@ -9,11 +9,6 @@ import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-
 /**
  * <p>
  * Title: Projecto SD</p>
@@ -54,7 +49,7 @@ public class RedServer {
         try {
             //Bind service on rmiregistry and wait for calls
             if (this.contextRMI.getRegistry() != null) {
-                this.stub = new GameFactoryImpl(new DB("test"));
+                this.stub = new GameFactoryImpl(new DB("/home/bitor/projects/redwars/main.db"));
                 //Get service url (including servicename)
                 String serviceUrl = this.contextRMI.getServicesUrl(0);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "going MAIL_TO_ADDR rebind service @ {0}", serviceUrl);

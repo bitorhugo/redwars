@@ -11,10 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
-import com.auth0.jwt.algorithms.Algorithm;
-
 import edu.ufp.inf.sd.rmi.red.model.sessiontoken.SessionToken;
-import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class DB implements DBI {
@@ -26,36 +23,39 @@ public class DB implements DBI {
     }
     
     @Override
-    public void insert(String username, String secret) {
-        SessionToken token = new SessionToken(username);
+    public Optional<User> insert(String username, String secret) {
+        User u = null;
+        SessionToken token = new SessionToken(username); // create new SessionToken
         String sql = "INSERT INTO User (username,secret, token) " +
-                "VALUES('" + username + "', '" + secret + "', '" + token.getToken() + "')'"; 
+                "VALUES('" + username + "', '" + secret + "', '" + token.getToken() + "');"; 
         try (Connection conn = this.connect();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
             stmt.close();
             this.close(conn);
+            u = new User(username, secret, token);
         } catch (SQLException e) {
             System.err.println(e);
-        } 
+        }
+        System.out.println("Inserted: " + u);
+        return Optional.ofNullable(u);
     }
 
     @Override
     public Optional<User> update(User u) {
-
+        String sql = "UPDATE User set token = '" + u.getToken() + "' where username= " + u.getUsername() + ";";
         return null;
     }
 
     @Override
     public boolean delete(User u) {
-
         return false;
     }
 
     @Override
     public Optional<User> select(String username, String secret) {
-        Optional<User> user = null;
-        String sql = "SELECT username FROM User u where u.username = " + username + " limit 1";
+        User user = null;
+        String sql = "SELECT * FROM User u where u.username = '" + username + "' limit 1";
         try (Connection conn = this.connect();
              Statement stmt  = conn.createStatement()) {
             ResultSet rs = stmt.executeQuery(sql);
@@ -63,10 +63,9 @@ public class DB implements DBI {
             String hashed = toHexString(md.digest(secret.getBytes(StandardCharsets.UTF_8)));
             System.out.println("hashed:" + hashed);
             while(rs.next()) {
-                user = Optional.ofNullable(
-                        new User(rs.getString("username"),
-                                 rs.getString(hashed),
-                                 rs.getString("token")));
+                user = new User(rs.getString("username"),
+                                rs.getString("secret"),
+                                new SessionToken(rs.getString("token")));
             }
             rs.close();
             stmt.close();
@@ -74,26 +73,8 @@ public class DB implements DBI {
         } catch (SQLException | NoSuchAlgorithmException e) {
             System.err.println(e);
         }
-        return user;
-    }
-
-    @Override
-    public Optional<SessionToken> selectToken(User u) throws RemoteUserNotFoundException {
-        String username = u.getUsername();
-        String sql = "SELECT username FROM User u where u.username = " + username + " limit 1";
-        try (Connection conn = this.connect();
-             Statement stmt  = conn.createStatement();
-             ResultSet rs    = stmt.executeQuery(sql)) {
-            while(rs.next()) {
-                return Optional.ofNullable(new SessionToken(rs.getString("token")));
-            }
-            rs.close();
-            stmt.close();
-            this.close(conn);
-        } catch (SQLException e) {
-            throw new RemoteUserNotFoundException("User not found");
-        }
-        return null;
+        System.out.println(user);
+        return Optional.ofNullable(user);
     }
 
     private Connection connect() throws SQLException{
@@ -102,8 +83,7 @@ public class DB implements DBI {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        String connection_string = "jdbc:sqlite:/home/bitor/projects/redwars/main.db";
-        System.out.println("Connected to Database");
+        String connection_string = "jdbc:sqlite:" + this.name;
         return DriverManager.getConnection(connection_string);
     }
 
