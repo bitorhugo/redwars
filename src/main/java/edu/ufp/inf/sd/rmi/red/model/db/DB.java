@@ -45,7 +45,7 @@ public class DB implements DBI {
 
     @Override
     public Optional<SessionToken> selectToken(User u) throws RemoteUserNotFoundException {
-        String username = u.getUname();
+        String username = u.getUsername();
         String sql = "SELECT name FROM User u where u.name = " + username + " limit 1";
         try (Connection conn = this.connect();
              Statement stmt  = conn.createStatement();
