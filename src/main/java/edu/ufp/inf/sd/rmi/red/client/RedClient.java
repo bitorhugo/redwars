@@ -1,7 +1,6 @@
 package edu.ufp.inf.sd.rmi.red.client;
 
 import edu.ufp.inf.sd.rmi.red.client.login.LoginPanel;
-import edu.ufp.inf.sd.rmi.red.model.user.User;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 import engine.Game;
@@ -40,12 +39,13 @@ public class RedClient {
         // this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // this.setLocationRelativeTo(null);
         // this.setVisible(true);
-        //new Game();
-        try {
-            this.stub.login(new User("bitor", "123"));
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        new Game();
+        // try {
+        //     this.stub.register("bitor", "123");
+
+        // } catch (RemoteException e) {
+        //     e.printStackTrace();
+        // }
 
         
     }

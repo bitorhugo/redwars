@@ -4,8 +4,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import edu.ufp.inf.sd.rmi.red.model.sessiontoken.SessionToken;
-import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public interface GameFactoryRI extends Remote {
-    public SessionToken login(User user) throws RemoteException;
+    public SessionToken login(String username, String secret) throws RemoteException;
+
+    public SessionToken register(String username, String secret) throws RemoteException;
 }

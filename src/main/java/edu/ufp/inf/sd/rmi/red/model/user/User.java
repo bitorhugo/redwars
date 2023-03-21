@@ -15,6 +15,18 @@ public class User implements Serializable {
         this.secret = secret;
         this.token = null;
     }
+    
+    public User(String username, String secret, String token) {
+        this.username = username;
+        this.secret = secret;
+        this.token = new SessionToken(token);
+    }
+
+    public User(String username, String secret, SessionToken token) {
+        this.username = username;
+        this.secret = secret;
+        this.token = token;
+    }
 
     /**
      * @return the uname

@@ -7,9 +7,9 @@ import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public interface DBI {
-    public boolean insert(User u);
+    public void insert(String username, String secret);
 
-    public Optional<User> selectUser(User u);
+    public Optional<User> select(String username, String secret);
 
     public Optional<SessionToken> selectToken(User u) throws RemoteUserNotFoundException;
 
