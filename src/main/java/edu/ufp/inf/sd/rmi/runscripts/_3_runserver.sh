@@ -20,7 +20,16 @@ cd ${ABSPATH2CLASSES}
 #   To ensure that RMI uses a SMTP_HOST_ADDR name (or IP address) for the server that is routable MAIL_FROM_ADDR all potential clients, set the java.rmi.server.hostname property.
 # * java.security.policy property is used MAIL_TO_ADDR specify the policy file that contains the permissions you intend MAIL_TO_ADDR grant.
 
-java -cp ${CLASSPATH}":/home/bitor/projects/redwars/sqlite-jdbc-3.41.0.0.jar"\
+# cd ${JAVAPROJ}
+# mvn exec:java -Dexec.mainClass="edu.ufp.inf.sd.rmi.red.server.RedServer" -Djava.rmi.server.codebase=${SERVER_CODEBASE} -Djava.rmi.server.hostname=${SERVER_RMI_HOST} -Djava.security.policy=${SERVER_SECURITY_POLICY} -Dexec.args="'${REGISTRY_HOST}' '${REGISTRY_PORT}' '${SERVICE_NAME_ON_REGISTRY}'"
+
+jwt="/home/bitor/projects/redwars/dependencies/java-jwt-4.2.0.jar"
+jacka="/home/bitor/projects/redwars/dependencies/jackson-annotations-2.13.2.jar"
+jackc="/home/bitor/projects/redwars/dependencies/jackson-core-2.13.2.jar"
+jackd="/home/bitor/projects/redwars/dependencies/jackson-databind-2.13.2.2.jar"
+sqlite="/home/bitor/projects/redwars/dependencies/sqlite-jdbc-3.41.0.0.jar"
+
+java -cp ${CLASSPATH}":"${sqlite}":"${jacka}":"${jackc}":"${jackd}":"${jwt}\
      -Djava.rmi.server.codebase=${SERVER_CODEBASE} \
      -Djava.rmi.server.hostname=${SERVER_RMI_HOST} \
      -Djava.security.policy=${SERVER_SECURITY_POLICY} \

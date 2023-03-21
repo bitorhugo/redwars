@@ -3,7 +3,7 @@ source ./setenv.sh client
 
 cd "${ABSPATH2CLASSES}"
 
-java -cp "${CLASSPATH}" \
+java -cp ${CLASSPATH} \
      -Djava.security.policy="${CLIENT_SECURITY_POLICY}" \
      -Djava.rmi.server.codebase="${SERVER_CODEBASE}" \
      -D${JAVAPACKAGEROLE}.codebase="${CLIENT_CODEBASE}" \
