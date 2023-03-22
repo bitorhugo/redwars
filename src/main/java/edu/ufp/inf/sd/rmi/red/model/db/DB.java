@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
-import edu.ufp.inf.sd.rmi.red.model.session.Session;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class DB implements DBI {
@@ -25,7 +25,7 @@ public class DB implements DBI {
     @Override
     public Optional<User> insert(String username, String secret) {
         User u = null;
-        Session session = new Session(); // create new SessionToken
+        GameSession session = new GameSession(); // create new SessionToken
         String hash = this.hash(secret).orElseThrow();
         String sql = "INSERT INTO User (username, secret, token) " +
             "VALUES('" + username + "', '" + hash + "', '" + session.getToken() + "');"; 
@@ -63,7 +63,7 @@ public class DB implements DBI {
             while(rs.next()) {
                 String u = rs.getString("username");
                 String s = rs.getString("secret");
-                Session session = new Session();
+                GameSession session = new GameSession();
                 session.setToken(rs.getString("token"));
                 user = new User(u, s, session);
             }

@@ -2,13 +2,13 @@ package edu.ufp.inf.sd.rmi.red.model.user;
 
 import java.io.Serializable;
 
-import edu.ufp.inf.sd.rmi.red.model.session.Session;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 
 public class User implements Serializable {
 
     private String username;
     private String secret;
-    private Session session;
+    private GameSession session;
 
     public User(String username, String secret) {
         this.username = username;
@@ -16,7 +16,7 @@ public class User implements Serializable {
         this.session = null;
     }
 
-    public User(String username, String secret, Session session) {
+    public User(String username, String secret, GameSession session) {
         this.username = username;
         this.secret = secret;
         this.session = session;
@@ -53,14 +53,14 @@ public class User implements Serializable {
     /**
      * @return the session
      */
-    public Session getSession() {
+    public GameSession getSession() {
         return this.session;
     }
 
     /**
      * @param session session to be set
      */
-    public void setSession(Session session) {
+    public void setSession(GameSession session) {
         this.session = session;
     }
 
