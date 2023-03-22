@@ -2,24 +2,24 @@ package edu.ufp.inf.sd.rmi.red.model.user;
 
 import java.io.Serializable;
 
-import edu.ufp.inf.sd.rmi.red.model.sessiontoken.SessionToken;
+import edu.ufp.inf.sd.rmi.red.model.session.Session;
 
 public class User implements Serializable {
 
     private String username;
     private String secret;
-    private SessionToken token;
+    private Session session;
 
     public User(String username, String secret) {
         this.username = username;
         this.secret = secret;
-        this.token = null;
+        this.session = null;
     }
 
-    public User(String username, String secret, SessionToken token) {
+    public User(String username, String secret, Session session) {
         this.username = username;
         this.secret = secret;
-        this.token = token;
+        this.session = session;
     }
     
     /**
@@ -51,17 +51,17 @@ public class User implements Serializable {
     }
 
     /**
-     * @return the token
+     * @return the session
      */
-    public SessionToken getToken() {
-        return this.token;
+    public Session getSession() {
+        return this.session;
     }
 
     /**
-     * @param token the token to set
+     * @param session session to be set
      */
-    public void setToken(SessionToken token) {
-        this.token = token;
+    public void setSession(Session session) {
+        this.session = session;
     }
 
 

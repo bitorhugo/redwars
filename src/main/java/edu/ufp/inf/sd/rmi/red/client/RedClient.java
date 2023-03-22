@@ -41,7 +41,7 @@ public class RedClient {
         // this.setVisible(true);
         // new Game();
         try {
-            System.out.println(this.stub.login("bitor", "123"));
+            System.out.println(this.stub.register("bitor", "123"));
         } catch (RemoteException e) {
             e.printStackTrace();
         }

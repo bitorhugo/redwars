@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
-import edu.ufp.inf.sd.rmi.red.model.sessiontoken.SessionToken;
+import edu.ufp.inf.sd.rmi.red.model.session.Session;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class DB implements DBI {
@@ -25,15 +25,16 @@ public class DB implements DBI {
     @Override
     public Optional<User> insert(String username, String secret) {
         User u = null;
-        SessionToken token = new SessionToken(username); // create new SessionToken
-        String sql = "INSERT INTO User (username,secret, token) " +
-                "VALUES('" + username + "', '" + secret + "', '" + token.getToken() + "');"; 
+        Session session = new Session(); // create new SessionToken
+        String hash = this.hash(secret).orElseThrow();
+        String sql = "INSERT INTO User (username, secret, token) " +
+            "VALUES('" + username + "', '" + hash + "', '" + session.getToken() + "');"; 
         try (Connection conn = this.connect();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
             stmt.close();
             this.close(conn);
-            u = new User(username, secret, token);
+            u = new User(username, hash, session);
         } catch (SQLException e) {
             System.err.println(e);
         }
@@ -43,7 +44,6 @@ public class DB implements DBI {
 
     @Override
     public Optional<User> update(User u) {
-        String sql = "UPDATE User set token = '" + u.getToken() + "' where username= " + u.getUsername() + ";";
         return null;
     }
 
@@ -55,22 +55,22 @@ public class DB implements DBI {
     @Override
     public Optional<User> select(String username, String secret) {
         User user = null;
-        String sql = "SELECT * FROM User u where u.username = '" + username + "' limit 1";
+        String hash = this.hash(secret).orElseThrow();
+        String sql = "SELECT * FROM User u where u.username = '" + username + "' and secret = '" + hash + "' limit 1";
         try (Connection conn = this.connect();
              Statement stmt  = conn.createStatement()) {
             ResultSet rs = stmt.executeQuery(sql);
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            String hashed = toHexString(md.digest(secret.getBytes(StandardCharsets.UTF_8)));
-            System.out.println("hashed:" + hashed);
             while(rs.next()) {
-                user = new User(rs.getString("username"),
-                                rs.getString("secret"),
-                                new SessionToken(rs.getString("token")));
+                String u = rs.getString("username");
+                String s = rs.getString("secret");
+                Session session = new Session();
+                session.setToken(rs.getString("token"));
+                user = new User(u, s, session);
             }
             rs.close();
             stmt.close();
             this.close(conn);
-        } catch (SQLException | NoSuchAlgorithmException e) {
+        } catch (SQLException e) {
             System.err.println(e);
         }
         System.out.println(user);
@@ -95,13 +95,25 @@ public class DB implements DBI {
         }
     }
 
-    public static String toHexString(byte[] hash) {
+    private Optional<String> hash(String input) {
+        String hash = null;
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+            hash  = toHexString(md.digest(input.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return Optional.ofNullable(hash);
+    }
+
+    private static String toHexString(byte[] hash) {
         BigInteger number = new BigInteger(1, hash);
         StringBuilder hexString = new StringBuilder(number.toString(16));
         while (hexString.length() < 64)
-        {
-            hexString.insert(0, '0');
-        }
+            {
+                hexString.insert(0, '0');
+            }
         return hexString.toString();
     }
 
