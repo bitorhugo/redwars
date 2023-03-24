@@ -11,6 +11,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 import engine.Game;
 
 /**
@@ -33,7 +34,7 @@ public class Options implements ActionListener,ChangeListener {
 	JButton ChangeSize = new JButton("Change Size");
 	JButton Close = new JButton("Return");
 	JButton Load = new JButton("Load Texture");
-	
+
 	public Options() {
 		Screen.setMajorTickSpacing(2);
 		Screen.setMinorTickSpacing(1);

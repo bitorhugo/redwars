@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 import engine.Game;
 
 /**
@@ -32,7 +33,14 @@ public class StartMenu implements ActionListener {
 	//Map list
 	public JList maps_list = new JList();
 	DefaultListModel maps_model = new DefaultListModel();
-	
+
+    private GameSession session;
+    
+    public StartMenu(GameSession session) {
+        this();
+        this.session = session;
+    }
+    
 	public StartMenu() {
 		Point size = MenuHandler.PrepMenu(400,280);
 		MenuHandler.HideBackground();
@@ -84,7 +92,10 @@ public class StartMenu implements ActionListener {
             new PlayerSelection(maps_list.getSelectedValue()+"");
         }
 		else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
-		else if (s==Join) {Game.error.ShowError("Online features are not added yet.");}
+		else if (s==Join) {
+            // new GameSelection()
+            Game.error.ShowError("Online features are not added yet.");
+        }
 		else if (s==Editor) {
 			Game.edit.StartEditor(
 					"MapName",

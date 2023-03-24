@@ -7,6 +7,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+
 /**
  * Keyboard handling for the game along with the mouse setup for game handling.
  * Menus are being moved to gui.gms
@@ -42,7 +44,7 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 	//Mouse (right/left clicks)
 	private final int main = MouseEvent.BUTTON1;
 	private final int alt = MouseEvent.BUTTON1;
-	
+
 	public InputHandler() {
 		Game.gui.addKeyListener(this);
 		Game.gui.addMouseListener(this);

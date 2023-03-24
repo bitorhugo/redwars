@@ -11,7 +11,7 @@ import javax.swing.DefaultListModel;
  * @version 0.3
  */
 public class FileFinder {
-	final String mappath = "/home/bitor/projects/redwars/maps";
+	final String mappath = "maps";
 	final String packpath = "mods";
 	final String modpath = "mods";
 

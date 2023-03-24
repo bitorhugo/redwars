@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import edu.ufp.inf.sd.rmi.red.client.login.LoginPanel;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 
 public class Game extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -55,7 +56,8 @@ public class Game extends JFrame {
 	public static List<players.Base> displayC = new ArrayList<players.Base>();
 	public static List<buildings.Base> displayB = new ArrayList<buildings.Base>();
 	public static List<units.Base> displayU = new ArrayList<units.Base>();
-	
+
+    
 	public Game() {
         super (name);
 		//Default Settings of the JFrame
@@ -68,6 +70,7 @@ public class Game extends JFrame {
 
 		//Creates all the gui elements and sets them up
 		gui = new Gui(this);
+        // gui = new Gui(session, this);
 		add(gui);
 		gui.setFocusable(true);
 		gui.requestFocusInWindow();

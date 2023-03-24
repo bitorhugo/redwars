@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 import engine.Game;
 
 /**
@@ -33,7 +34,14 @@ public class PlayerSelection implements ActionListener {
 	JButton ThunderbirdsAreGo = new JButton ("Start");
 	
 	String mapname;
-	
+
+    private GameSession session;
+
+    public PlayerSelection(GameSession session, String map) {
+        this(map);
+        this.session = session;
+    }
+
 	public PlayerSelection(String map) {
 		mapname = map;
 		Point size = MenuHandler.PrepMenu(400,200);
@@ -75,6 +83,9 @@ public class PlayerSelection implements ActionListener {
 			Game.gui.LoginScreen();
 		}
 		else if(s == ThunderbirdsAreGo) {
+            // here is where the new game is started
+            // maybe create a queue of minimum amount of players can attach
+            // this.session.test("Hello from ThunderBirdsAreGo");
 			MenuHandler.CloseMenu();
 			Game.btl.NewGame(mapname);
 			Game.btl.AddCommanders(plyer, npc, 100, 50);
