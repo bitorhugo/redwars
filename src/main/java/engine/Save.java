@@ -16,7 +16,7 @@ import java.util.Properties;
  * @version 0.2
  */
 public class Save {
-	final String path = "saves/";
+	final String path = "/home/bitor/projects/redwars/saves/";
 	
 	public void SaveSettings() {
 		//If the folder doesn't exist, create it so we can save our save files inside it.
@@ -125,7 +125,7 @@ public class Save {
 		try {
 			//Opens the property file and starts a battle with the map in the save folder. 
 			Properties configFile = new Properties();
-			configFile.load(new FileInputStream(System.getProperty("user.dir") + "/" + path + "savegame.properties"));
+			configFile.load(new FileInputStream(path + "savegame.properties"));
 			Game.btl.NewGame(configFile.getProperty("Map"));
 			Game.btl.currentplayer = Integer.parseInt(configFile.getProperty("CurrentPlayer"));
 			Game.btl.day = Integer.parseInt(configFile.getProperty("Days"));

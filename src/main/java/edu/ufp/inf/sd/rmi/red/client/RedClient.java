@@ -30,11 +30,12 @@ public class RedClient {
 
 
     private void startGame() {
-        try {
-            System.out.println(this.stub.login("mila", "123"));
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        new Game();
+        // try {
+        //     System.out.println(this.stub.login("mila", "123"));
+        // } catch (RemoteException e) {
+        //     e.printStackTrace();
+        // }
     }
 
     
