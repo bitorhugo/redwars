@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 
 public class RemoteGameSessionExpiredException extends RemoteException {
 
-    public RemoteGameSessionExpiredException(){
+    public RemoteGameSessionExpiredException() {
         super();
     }
 

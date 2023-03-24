@@ -3,24 +3,30 @@ package edu.ufp.inf.sd.rmi.red.model.user;
 import java.io.Serializable;
 import java.util.Optional;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.token.Token;
 
 public class User implements Serializable {
 
     private String username;
     private String secret;
-    private GameSession session;
+    private Token token;
+
 
     public User(String username, String secret) {
         this.username = username;
         this.secret = secret;
-        this.session = null;
     }
 
-    public User(String username, String secret, GameSession session) {
+    public User(String username, String secret, Token token) {
         this.username = username;
         this.secret = secret;
-        this.session = session;
+        this.token = token;
+    }
+
+    public User(String username, String secret, String token) {
+        this.username = username;
+        this.secret = secret;
+        this.token = new Token(token);
     }
     
     /**
@@ -51,23 +57,16 @@ public class User implements Serializable {
         this.secret = secret;
     }
 
-    /**
-     * @return the session
-     */
-    public Optional<GameSession> getSession() {
-        return Optional.ofNullable(this.session.verifyToken());
+    public Optional<Token> getToken() {
+        return Optional.ofNullable(this.token.verifyToken());
     }
 
-    /**
-     * @param session session to be set
-     */
-    public void setSession(GameSession session) {
-        this.session = session;
+    public void setToken(Token token) {
+        this.token = token;
     }
-
 
     @Override
     public String toString() {
-        return "User{username=" + this.username + ", secret=" + this.secret + "}";
+        return "User{username=" + this.username + ", secret=" + this.secret + ", token=" + this.token + "}";
     }
 }

@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.token.Token;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class DB implements DBI {
@@ -25,16 +25,16 @@ public class DB implements DBI {
     @Override
     public Optional<User> insert(String username, String secret) {
         User u = null;
-        GameSession session = new GameSession(); // create new SessionToken
-        String hash = this.hash(secret).orElseThrow();
+        Token t = new Token();
+        String hash = this.hash(secret).orElseThrow(); // hash secret
         String sql = "INSERT INTO User (username, secret, token) " +
-            "VALUES('" + username + "', '" + hash + "', '" + session.getToken() + "');"; 
+            "VALUES('" + username + "', '" + hash + "', '" + t.getValue() + "');"; 
         try (Connection conn = this.connect();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
             stmt.close();
             this.close(conn);
-            u = new User(username, hash, session);
+            u = new User(username, hash, t);
         } catch (SQLException e) {
             System.err.println(e);
         }
@@ -63,9 +63,8 @@ public class DB implements DBI {
             while(rs.next()) {
                 String u = rs.getString("username");
                 String s = rs.getString("secret");
-                GameSession session = new GameSession();
-                session.setToken(rs.getString("token"));
-                user = new User(u, s, session);
+                String t = rs.getString("token");
+                user = new User(u, s, new Token(t));
             }
             rs.close();
             stmt.close();
