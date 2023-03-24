@@ -19,6 +19,5 @@ public class LoginPanel extends JPanel {
         userIDLabel.setText("User ID");
         this.add(userIDLabel);
     }
-    // TODO: add jwt token to login
     
 }

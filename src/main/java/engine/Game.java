@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
 
+import edu.ufp.inf.sd.rmi.red.client.login.LoginPanel;
+
 public class Game extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
@@ -63,7 +65,7 @@ public class Game extends JFrame {
 	    setUndecorated(false);
 		setResizable(false);
 	    setLocationRelativeTo(null);
-				
+
 		//Creates all the gui elements and sets them up
 		gui = new Gui(this);
 		add(gui);
@@ -81,6 +83,7 @@ public class Game extends JFrame {
         save.LoadSettings();
 		GameLoop();
 	}
+
 
 	private void GameLoop() {
 		boolean loop=true;

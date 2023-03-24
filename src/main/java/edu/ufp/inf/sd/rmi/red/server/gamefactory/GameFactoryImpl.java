@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import edu.ufp.inf.sd.rmi.red.model.db.DBI;
 import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.RemoteGameSessionExpiredException;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserAlreadyRegisteredException;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
@@ -25,13 +26,13 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
     @Override
     public GameSession login(String username, String secret) throws RemoteException {
         User u = this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
-        return u.getSession();
+        return u.getSession().orElseThrow(RemoteGameSessionExpiredException::new);
     }
 
     @Override
     public GameSession register(String username, String secret) throws RemoteException {
         User u = this.db.insert(username, secret).orElseThrow(RemoteUserAlreadyRegisteredException::new);
-        return u.getSession();
+        return u.getSession().orElseThrow(RemoteGameSessionExpiredException::new);
     }
 
     

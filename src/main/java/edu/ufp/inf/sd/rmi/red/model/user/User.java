@@ -1,6 +1,7 @@
 package edu.ufp.inf.sd.rmi.red.model.user;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 
@@ -53,8 +54,8 @@ public class User implements Serializable {
     /**
      * @return the session
      */
-    public GameSession getSession() {
-        return this.session;
+    public Optional<GameSession> getSession() {
+        return Optional.ofNullable(this.session.verifyToken());
     }
 
     /**
