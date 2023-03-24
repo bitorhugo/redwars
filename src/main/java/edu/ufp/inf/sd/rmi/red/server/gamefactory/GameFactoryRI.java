@@ -3,10 +3,10 @@ package edu.ufp.inf.sd.rmi.red.server.gamefactory;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 
 public interface GameFactoryRI extends Remote {
-    public GameSession login(String username, String secret) throws RemoteException;
+    public GameSessionRI login(String username, String secret) throws RemoteException;
 
-    public GameSession register(String username, String secret) throws RemoteException;
+    public GameSessionRI register(String username, String secret) throws RemoteException;
 }
