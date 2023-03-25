@@ -8,7 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import engine.Game;
 
 /**
@@ -34,9 +34,9 @@ public class StartMenu implements ActionListener {
 	public JList maps_list = new JList();
 	DefaultListModel maps_model = new DefaultListModel();
 
-    private GameSession session;
+    private GameSessionRI session;
     
-    public StartMenu(GameSession session) {
+    public StartMenu(GameSessionRI session) {
         this();
         this.session = session;
     }
@@ -89,7 +89,8 @@ public class StartMenu implements ActionListener {
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (s==New) {
-            new PlayerSelection(maps_list.getSelectedValue()+"");
+            // new PlayerSelection(maps_list.getSelectedValue()+"");
+            new PlayerSelection(this.session, maps_list.getSelectedValue() + "");
         }
 		else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {

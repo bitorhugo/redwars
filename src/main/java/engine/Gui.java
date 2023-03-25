@@ -7,7 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import javax.swing.JPanel;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 	
 public class Gui extends JPanel {
 	private static final long serialVersionUID = 3457450162330022096L;
@@ -24,9 +24,9 @@ public class Gui extends JPanel {
 	public boolean MenuBackground;
 	public int[] MenuSize = {0,0,0,0};//X, Y, Width, Height
 
-    private GameSession session;
+    private GameSessionRI session;
 
-    public Gui(GameSession session, Game game) {
+    public Gui(GameSessionRI session, Game game) {
         this(game);
         this.session = session;
     }
@@ -43,7 +43,7 @@ public class Gui extends JPanel {
 		Game.GameState=Game.State.MENU;
 		removeAll();
 		// new menus.StartMenu();
-        new menus.StartMenu();
+        new menus.StartMenu(this.session);
 		if (Game.error.showing) {add(Game.error);}
 	}
 	/**Creates the InGame screen layout*/

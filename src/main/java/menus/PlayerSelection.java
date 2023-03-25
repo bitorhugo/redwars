@@ -3,11 +3,12 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import engine.Game;
 
 /**
@@ -35,9 +36,9 @@ public class PlayerSelection implements ActionListener {
 	
 	String mapname;
 
-    private GameSession session;
+    private GameSessionRI session;
 
-    public PlayerSelection(GameSession session, String map) {
+    public PlayerSelection(GameSessionRI session, String map) {
         this(map);
         this.session = session;
     }
@@ -85,7 +86,11 @@ public class PlayerSelection implements ActionListener {
 		else if(s == ThunderbirdsAreGo) {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
-            // this.session.test("Hello from ThunderBirdsAreGo");
+            try {
+                this.session.test("Hello from ThunderBirdsAreGo");
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
 			MenuHandler.CloseMenu();
 			Game.btl.NewGame(mapname);
 			Game.btl.AddCommanders(plyer, npc, 100, 50);

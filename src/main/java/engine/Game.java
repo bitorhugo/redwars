@@ -6,8 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
 
-import edu.ufp.inf.sd.rmi.red.client.login.LoginPanel;
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
+import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 
 public class Game extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -58,7 +57,7 @@ public class Game extends JFrame {
 	public static List<units.Base> displayU = new ArrayList<units.Base>();
 
     
-	public Game() {
+	public Game(GameSessionRI session) {
         super (name);
 		//Default Settings of the JFrame
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -69,8 +68,37 @@ public class Game extends JFrame {
 	    setLocationRelativeTo(null);
 
 		//Creates all the gui elements and sets them up
-		gui = new Gui(this);
-        // gui = new Gui(session, this);
+		// gui = new Gui(this);
+        gui = new Gui(session, this);
+		add(gui);
+		gui.setFocusable(true);
+		gui.requestFocusInWindow();
+		
+		//load images, initialize the map, and adds the input settings.
+		load = new LoadImages();
+		map = new Map();
+		input = new InputHandler();
+		list = new ListData();
+		
+		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
+		gui.LoginScreen();
+        save.LoadSettings();
+		GameLoop();
+	}
+
+    public Game() {
+        super (name);
+		//Default Settings of the JFrame
+	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    setSize(new Dimension(20*ScreenBase+6,12*ScreenBase+12));
+		setBounds(0,0,20*ScreenBase+6,12*ScreenBase+12);
+	    setUndecorated(false);
+		setResizable(false);
+	    setLocationRelativeTo(null);
+
+		//Creates all the gui elements and sets them up
+		// gui = new Gui(this);
+        gui = new Gui(this);
 		add(gui);
 		gui.setFocusable(true);
 		gui.requestFocusInWindow();
