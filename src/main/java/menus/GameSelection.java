@@ -10,19 +10,16 @@ import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import engine.Game;
 
 
 public class GameSelection implements ActionListener {
 
-    private GameSessionRI session;
     public JButton Attach = new JButton("Attach");
     public JButton Return = new JButton("Return");
     public JList<Integer> availableGamesList;
 
     public GameSelection() {
-        //        this.session = session;
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
