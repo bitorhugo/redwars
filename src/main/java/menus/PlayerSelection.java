@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.UUID;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -85,14 +86,16 @@ public class PlayerSelection implements ActionListener {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
             try {
-                Game.session.createGame();
+                UUID id = UUID.randomUUID();
+                Game.session.createGame(id);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-			MenuHandler.CloseMenu();
-			Game.btl.NewGame(mapname);
-			Game.btl.AddCommanders(plyer, npc, 100, 50);
-			Game.gui.InGameScreen();
+            new WaitQeueuMenu(id);
+			// MenuHandler.CloseMenu();
+			// Game.btl.NewGame(mapname);
+			// Game.btl.AddCommanders(plyer, npc, 100, 50);
+			// Game.gui.InGameScreen();
 		}
 		for (int i = 0; i < 4; i++) {
 			if (s == Prev[i]) {
