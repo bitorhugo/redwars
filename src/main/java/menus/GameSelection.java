@@ -3,6 +3,7 @@ package menus;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
+import java.util.UUID;
 import java.awt.Point;
 
 import javax.swing.DefaultListModel;
@@ -17,7 +18,7 @@ public class GameSelection implements ActionListener {
 
     public JButton Attach = new JButton("Attach");
     public JButton Return = new JButton("Return");
-    public JList<Integer> availableGamesList;
+    public JList<UUID> availableGamesList;
 
     public GameSelection() {
         Point size = MenuHandler.PrepMenu(400, 200);
@@ -44,15 +45,15 @@ public class GameSelection implements ActionListener {
     }
 
     private void gameList(Point size) {
-        JScrollPane availableGames = new JScrollPane(this.availableGamesList=new JList<>(this.availableGames()));
+        JScrollPane availableGames = new JScrollPane(this.availableGamesList = new JList<>(this.availableGames()));
         availableGames.setBounds(size.x+220, size.y, 140, 260);
         Game.gui.add(availableGames);
 		this.availableGamesList.setBounds(0, 0, 140, 260);
 		this.availableGamesList.setSelectedIndex(0);
 	}
 
-    private DefaultListModel<Integer> availableGames() {
-        DefaultListModel<Integer> gamesList = new DefaultListModel<>();
+    private DefaultListModel<UUID> availableGames() {
+        DefaultListModel<UUID> gamesList = new DefaultListModel<>();
         try {
             Game.session.availableGames().forEach(gameID -> {
                     gamesList.addElement(gameID);

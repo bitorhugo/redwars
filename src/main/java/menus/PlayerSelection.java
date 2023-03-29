@@ -85,8 +85,8 @@ public class PlayerSelection implements ActionListener {
 		else if(s == ThunderbirdsAreGo) {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
+            UUID id = UUID.randomUUID();
             try {
-                UUID id = UUID.randomUUID();
                 Game.session.createGame(id);
             } catch (IOException e1) {
                 e1.printStackTrace();
