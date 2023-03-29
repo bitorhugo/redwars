@@ -101,31 +101,7 @@ public class RedClient extends JFrame {
      * Starts new Game 
      */
     private void startGame() {
-        try {
-            List<Integer> games = this.session.availableGames();
-            
-            System.out.println("Select option:");
-            System.out.println("(N) New game");
-            System.out.println("(A) Available games");
-
-            String choice = this.in.nextLine();
-            switch (choice.toLowerCase()) {
-            case "n":
-                System.out.println("new game selected");
-                new Game(this.session);
-                break;
-            case "a":
-                if (games.isEmpty()) {
-                    System.out.println("No games available");
-                }
-                else {
-                    games.forEach(System.out::println);
-                }
-                break; 
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        new Game(this.session);
     }
 
     

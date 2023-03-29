@@ -47,6 +47,10 @@ public class Token {
     }
 
 
+    public int compareTo(Token t) {
+        return this.value.compareTo(t.value);
+    }
+    
     @Override
     public String toString() {
         return this.value;

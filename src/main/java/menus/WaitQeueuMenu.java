@@ -3,7 +3,6 @@ package menus;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
-import java.util.UUID;
 import java.awt.Point;
 
 import javax.swing.DefaultListModel;
@@ -11,56 +10,53 @@ import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
+
 import engine.Game;
 
 
-public class GameSelection implements ActionListener {
+public class WaitQeueuMenu implements ActionListener {
 
-    public JButton Attach = new JButton("Attach");
+    private int gameID;
+    
+    public JButton Start = new JButton("Start");
     public JButton Return = new JButton("Return");
-    public JList<Integer> availableGamesList;
+    public JList<Integer> playersInQeueu;
 
-    public GameSelection() {
+    public WaitQeueuMenu(int gameID) {
+        this.gameID = gameID;
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
         this.addGui();
         this.addActionListeners();
-        this.gameList(size);
+        this.PlayerList(size);
     }
 
     private void SetBounds(Point size) {
-		this.Attach.setBounds(size.x, size.y+10, 100, 32);
+		this.Start.setBounds(size.x, size.y+10, 100, 32);
 		this.Return.setBounds(size.x,size.y+10+38*1, 100, 32);
 	}
 
     private void addGui() {
-        Game.gui.add(Attach);
+        Game.gui.add(Start);
         Game.gui.add(Return);
     }
 
     private void addActionListeners() {
-        this.Attach.addActionListener(this);
+        this.Start.addActionListener(this);
         this.Return.addActionListener(this);
     }
 
-    private void gameList(Point size) {
-        JScrollPane availableGames = new JScrollPane(this.availableGamesList = new JList<>(this.availableGames()));
+    private void PlayerList(Point size) {
+        JScrollPane availableGames = new JScrollPane(this.playersInQeueu=new JList<>(this.players()));
         availableGames.setBounds(size.x+220, size.y, 140, 260);
         Game.gui.add(availableGames);
-		this.availableGamesList.setBounds(0, 0, 140, 260);
-		this.availableGamesList.setSelectedIndex(0);
+		this.playersInQeueu.setBounds(0, 0, 140, 260);
+		this.playersInQeueu.setSelectedIndex(0);
 	}
 
-    private DefaultListModel<Integer> availableGames() {
+    private DefaultListModel<Integer> players() {
         DefaultListModel<Integer> gamesList = new DefaultListModel<>();
-        try {
-            Game.session.availableGames().forEach(gameID -> {
-                    gamesList.addElement(gameID);
-                });
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
         return gamesList;
     }
     
@@ -68,17 +64,21 @@ public class GameSelection implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         Object s = e.getSource();
 
-        if (s == this.Return) {
+        if (s == this.Return) { // cancel game creation
+            try {
+                Game.session.cancelGame(this.gameID);
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
             MenuHandler.CloseMenu();
             Game.gui.LoginScreen();
         }
 
-        if (s == this.Attach) {
-            try {
-                Game.session.attach();
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
+        if (s == this.Start) {
+            // MenuHandler.CloseMenu();
+			// Game.btl.NewGame(mapname);
+			// Game.btl.AddCommanders(plyer, npc, 100, 50);
+			// Game.gui.InGameScreen();
         }
         
     }

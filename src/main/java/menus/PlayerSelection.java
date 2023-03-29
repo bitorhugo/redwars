@@ -85,13 +85,13 @@ public class PlayerSelection implements ActionListener {
 		else if(s == ThunderbirdsAreGo) {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
-            UUID id = UUID.randomUUID();
             try {
-                Game.session.createGame(id);
+                int gameID = Game.session.createGame(mapname);
+                new WaitQeueuMenu(gameID);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            new WaitQeueuMenu(id);
+
 			// MenuHandler.CloseMenu();
 			// Game.btl.NewGame(mapname);
 			// Game.btl.AddCommanders(plyer, npc, 100, 50);
