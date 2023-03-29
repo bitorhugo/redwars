@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.ufp.inf.sd.rmi.red.model.token.Token;
@@ -20,7 +21,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     // saves/
     //      0/savegame.properties
     //      1/savageame/properties
-    Map<Integer, String> availableGames = new ConcurrentHashMap<>();
+    Map<UUID, String> availableGames = new ConcurrentHashMap<>();
     
     public GameSession(Token token) throws RemoteException {
         super();
@@ -29,9 +30,9 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     private void testing() {
-        this.availableGames.put(this.availableGames.size(), "");
-        this.availableGames.put(this.availableGames.size(), "");
-        this.availableGames.put(this.availableGames.size(), "");        
+        this.availableGames.put(UUID.randomUUID(), "");
+        this.availableGames.put(UUID.randomUUID(), "");
+        this.availableGames.put(UUID.randomUUID(), "");        
     }
     
     @Override
@@ -40,8 +41,8 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
-    public List<Integer> availableGames() throws RemoteException {
-        return new ArrayList<Integer>(this.availableGames.keySet());
+    public List<UUID> availableGames() throws RemoteException {
+        return new ArrayList<UUID>(this.availableGames.keySet());
     }
 
     @Override
@@ -49,8 +50,13 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
-    public void createGame() throws RemoteException {
-        
+    public void createGame(UUID id) throws RemoteException {
+        this.availableGames.put(id, "");
+    }
+
+    @Override
+    public void cancelGame(UUID id) throws RemoteException {
+        this.availableGames.remove(id);
     }
         
 }
