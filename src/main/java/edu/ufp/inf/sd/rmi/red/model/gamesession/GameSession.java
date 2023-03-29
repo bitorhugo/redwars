@@ -2,7 +2,8 @@ package edu.ufp.inf.sd.rmi.red.model.gamesession;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,17 +20,26 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     // saves/
     //      0/savegame.properties
     //      1/savageame/properties
-    Map<Integer, String> availableGames = new ConcurrentHashMap<>();
+    Map<Integer, List<String>> availableGames = new ConcurrentHashMap<>();
     
     public GameSession(Token token) throws RemoteException {
         super();
-        System.out.println(token);
         this.token = token;
+        this.availableGames.put(0, new ArrayList<>());
+        this.availableGames.put(1, new ArrayList<>());
+        this.availableGames.put(2, new ArrayList<>());
     }
+
+    
     
     @Override
-    public void test(String s) throws RemoteException {
-        System.out.println(s);
+    public void attach() throws RemoteException {
+        System.out.println("hello from new game");
+    }
+
+    @Override
+    public List<Integer> availableGames() throws RemoteException {
+        return new ArrayList<Integer>(this.availableGames.keySet());
     }
         
 }
