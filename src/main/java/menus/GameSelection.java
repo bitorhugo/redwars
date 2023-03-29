@@ -21,8 +21,8 @@ public class GameSelection implements ActionListener {
     public JButton Return = new JButton("Return");
     public JList<Integer> availableGamesList;
 
-    public GameSelection(GameSessionRI session) {
-        this.session = session;
+    public GameSelection() {
+        //        this.session = session;
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
@@ -57,7 +57,7 @@ public class GameSelection implements ActionListener {
     private DefaultListModel<Integer> availableGames() {
         DefaultListModel<Integer> gamesList = new DefaultListModel<>();
         try {
-            this.session.availableGames().forEach(gameID -> {
+            Game.session.availableGames().forEach(gameID -> {
                     gamesList.addElement(gameID);
                 });
         } catch (RemoteException e) {
@@ -73,6 +73,14 @@ public class GameSelection implements ActionListener {
         if (s == this.Return) {
             MenuHandler.CloseMenu();
             Game.gui.LoginScreen();
+        }
+
+        if (s == this.Attach) {
+            try {
+                Game.session.attach();
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
         }
         
     }

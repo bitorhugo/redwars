@@ -37,18 +37,7 @@ public class StartMenu implements ActionListener {
 	public JList maps_list = new JList();
 	DefaultListModel maps_model = new DefaultListModel();
 
-    private GameSessionRI session;
     public JList availableGamesList = new JList();
-    
-    public StartMenu(GameSessionRI session) {
-        this.session = session;
-        Point size = MenuHandler.PrepMenu(400,280);
-		MenuHandler.HideBackground();
-		SetBounds(size);
-		AddGui();
-		AddListeners();
-		MapList(size);
-    }
     
 	public StartMenu() {
 		Point size = MenuHandler.PrepMenu(400,280);
@@ -99,12 +88,11 @@ public class StartMenu implements ActionListener {
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (s==New) {
-            // new PlayerSelection(maps_list.getSelectedValue()+"");
-            new PlayerSelection(this.session, maps_list.getSelectedValue() + "");
+            new PlayerSelection(maps_list.getSelectedValue() + "");
         }
 		else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {
-            new GameSelection(this.session);
+            new GameSelection();
             Game.error.ShowError("Online features WIP.");
         }
 		else if (s==Editor) {

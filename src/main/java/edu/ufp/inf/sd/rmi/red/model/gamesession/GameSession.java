@@ -43,5 +43,14 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public List<Integer> availableGames() throws RemoteException {
         return new ArrayList<Integer>(this.availableGames.keySet());
     }
+
+    @Override
+    public void detach() throws RemoteException {
+    }
+
+    @Override
+    public void createGame() throws RemoteException {
+        
+    }
         
 }

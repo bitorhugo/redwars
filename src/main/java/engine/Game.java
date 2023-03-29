@@ -56,12 +56,10 @@ public class Game extends JFrame {
 	public static List<buildings.Base> displayB = new ArrayList<buildings.Base>();
 	public static List<units.Base> displayU = new ArrayList<units.Base>();
 
-    private GameSessionRI session;
+    public static GameSessionRI session;
     
-	public Game(GameSessionRI session) {
+	public Game(GameSessionRI s) {
         super (name);
-
-        this.session = session;
         //Default Settings of the JFrame
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    setSize(new Dimension(20*ScreenBase+6,12*ScreenBase+12));
@@ -70,9 +68,11 @@ public class Game extends JFrame {
 		setResizable(false);
 	    setLocationRelativeTo(null);
 
+        // set Game session
+        session = s;
 		//Creates all the gui elements and sets them up
 		// gui = new Gui(this);
-        gui = new Gui(this.session, this);
+        gui = new Gui(this);
 		add(gui);
 		gui.setFocusable(true);
 		gui.requestFocusInWindow();

@@ -23,13 +23,6 @@ public class Gui extends JPanel {
 	//For menu's
 	public boolean MenuBackground;
 	public int[] MenuSize = {0,0,0,0};//X, Y, Width, Height
-
-    private GameSessionRI session;
-
-    public Gui(GameSessionRI session, Game game) {
-        this(game);
-        this.session = session;
-    }
     
 	public Gui(Game game) {
 		setPreferredSize(new Dimension(width,height));
@@ -43,7 +36,7 @@ public class Gui extends JPanel {
 		Game.GameState=Game.State.MENU;
 		removeAll();
 		// new menus.StartMenu();
-        new menus.StartMenu(this.session);
+        new menus.StartMenu();
 		if (Game.error.showing) {add(Game.error);}
 	}
 	/**Creates the InGame screen layout*/

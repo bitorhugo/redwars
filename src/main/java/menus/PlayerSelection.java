@@ -41,13 +41,6 @@ public class PlayerSelection implements ActionListener {
 	
 	String mapname;
 
-    private GameSessionRI session;
-
-    public PlayerSelection(GameSessionRI session, String map) {
-        this(map);
-        this.session = session;
-    }
-
 	public PlayerSelection(String map) {
 		mapname = map;
 		Point size = MenuHandler.PrepMenu(400,200);
@@ -92,7 +85,7 @@ public class PlayerSelection implements ActionListener {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
             try {
-                this.session.attach();
+                Game.session.createGame();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
