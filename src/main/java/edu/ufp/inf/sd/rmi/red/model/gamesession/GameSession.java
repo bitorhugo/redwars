@@ -20,21 +20,23 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     // saves/
     //      0/savegame.properties
     //      1/savageame/properties
-    Map<Integer, List<String>> availableGames = new ConcurrentHashMap<>();
+    Map<Integer, String> availableGames = new ConcurrentHashMap<>();
     
     public GameSession(Token token) throws RemoteException {
         super();
         this.token = token;
-        this.availableGames.put(0, new ArrayList<>());
-        this.availableGames.put(1, new ArrayList<>());
-        this.availableGames.put(2, new ArrayList<>());
+        this.testing();
     }
 
-    
+    private void testing() {
+        this.availableGames.put(this.availableGames.size(), "");
+        this.availableGames.put(this.availableGames.size(), "");
+        this.availableGames.put(this.availableGames.size(), "");        
+    }
     
     @Override
     public void attach() throws RemoteException {
-        System.out.println("hello from new game");
+    
     }
 
     @Override
