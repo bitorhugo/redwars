@@ -79,19 +79,13 @@ public class StartMenu implements ActionListener {
 	}
 	private void MapList(Point size) {
 		maps_model = Game.finder.GrabMaps();
-
-		// JScrollPane maps_pane = new JScrollPane(maps_list = new JList(maps_model));
-		// maps_pane.setBounds(size.x+220, size.y+10, 140, 260);//220,10
-		// Game.gui.add(maps_pane);
-		// maps_list.setBounds(0, 0, 140, 260);
-		// maps_list.setSelectedIndex(0);
-
-        JScrollPane availableGames = new JScrollPane(this.availableGamesList=new JList<>(this.availableGames()));
-        availableGames.setBounds(size.x+220, size.y+10, 140, 260);//220,10
-        Game.gui.add(availableGames);
-		this.availableGamesList.setBounds(0, 0, 140, 260);
-		this.availableGamesList.setSelectedIndex(0);
+		JScrollPane maps_pane = new JScrollPane(maps_list = new JList(maps_model));
+		maps_pane.setBounds(size.x+220, size.y+10, 140, 260);//220,10
+		Game.gui.add(maps_pane);
+		maps_list.setBounds(0, 0, 140, 260);
+		maps_list.setSelectedIndex(0);
 	}
+    
 	private void AddListeners() {
 		New.addActionListener(this);
 		Load.addActionListener(this);
@@ -101,18 +95,6 @@ public class StartMenu implements ActionListener {
 		Options.addActionListener(this);
 		Exit.addActionListener(this);
 	}
-
-    private DefaultListModel<Integer> availableGames() {
-        DefaultListModel<Integer> gamesList = new DefaultListModel<>();
-        try {
-            this.session.availableGames().forEach(gameID -> {
-                    gamesList.addElement(gameID);
-                });;
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-        return gamesList;
-    }
 
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
