@@ -3,11 +3,14 @@ package menus;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
-import java.util.UUID;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.Point;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
@@ -18,6 +21,7 @@ public class GameSelection implements ActionListener {
 
     public JButton Attach = new JButton("Attach");
     public JButton Return = new JButton("Return");
+    public JLabel PanelInfo = new JLabel("Game Selection");
     public JList<Integer> availableGamesList;
 
     public GameSelection() {
@@ -32,11 +36,23 @@ public class GameSelection implements ActionListener {
     private void SetBounds(Point size) {
 		this.Attach.setBounds(size.x, size.y+10, 100, 32);
 		this.Return.setBounds(size.x,size.y+10+38*1, 100, 32);
+        this.panelInfoSetup();
+	}
+
+    private void panelInfoSetup() {
+        this.PanelInfo.setForeground(new Color(255, 0, 0));
+		Insets insets = Game.gui.getInsets();
+		Dimension size = Game.gui.getPreferredSize();
+		Dimension size2 = PanelInfo.getPreferredSize();
+		//sets the size and what not of the text to be shown and what not
+		PanelInfo.setBounds(8, 2, size2.width, size2.height);
+		PanelInfo.setBounds(size.width/2+insets.left-size2.width/2-8,insets.top+8, size2.width+16, size2.height+8);
 	}
 
     private void addGui() {
-        Game.gui.add(Attach);
-        Game.gui.add(Return);
+        Game.gui.add(this.Attach);
+        Game.gui.add(this.Return);
+        Game.gui.add(this.PanelInfo);
     }
 
     private void addActionListeners() {

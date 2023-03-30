@@ -9,12 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.UUID;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
-
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import engine.Game;
 
 /**

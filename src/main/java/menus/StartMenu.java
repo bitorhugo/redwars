@@ -93,7 +93,6 @@ public class StartMenu implements ActionListener {
 		else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {
             new GameSelection();
-            Game.error.ShowError("Online features WIP.");
         }
 		else if (s==Editor) {
 			Game.edit.StartEditor(
