@@ -97,7 +97,10 @@ public class GameSelection implements ActionListener {
 
         if (s == this.Attach) {
             try {
-                Game.session.attach();
+                // retrieve scroll pane option
+                // in this case will be lobby uuid
+                UUID lobbyID = this.availableGamesList.getSelectedValue();
+                Game.session.enterLobby(lobbyID);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

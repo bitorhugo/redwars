@@ -32,12 +32,13 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
-    public void attach() throws RemoteException {
+    public void enterLobby(UUID lobby) throws RemoteException {
         this.verifyToken();
+        this.lobbies.get(lobby).addPlayers(owner.getUsername());
     }
 
     @Override
-    public void detach() throws RemoteException {
+    public void exitLobby() throws RemoteException {
         this.verifyToken();
     }
 
