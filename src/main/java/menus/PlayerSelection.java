@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.UUID;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -83,7 +84,7 @@ public class PlayerSelection implements ActionListener {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
             try {
-                int gameID = Game.session.createGame(mapname);
+                UUID gameID = Game.session.createLobby(mapname);
                 new WaitQeueuMenu(gameID);
             } catch (IOException e1) {
                 e1.printStackTrace();

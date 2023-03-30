@@ -3,6 +3,7 @@ package menus;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
+import java.util.UUID;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -14,20 +15,19 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-
 import engine.Game;
 
 
 public class WaitQeueuMenu implements ActionListener {
 
-    private int gameID;
+    private UUID gameID;
     
     public JButton Start = new JButton("Start");
     public JButton Return = new JButton("Return");
     public JLabel PanelInfo = new JLabel("WaitQueue");
-    public JList<Integer> playersInQeueu;
+    public JList<String> playersInQeueu;
 
-    public WaitQeueuMenu(int gameID) {
+    public WaitQeueuMenu(UUID gameID) {
         this.gameID = gameID;
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
@@ -65,16 +65,16 @@ public class WaitQeueuMenu implements ActionListener {
     }
 
     private void PlayerList(Point size) {
-        JScrollPane availableGames = new JScrollPane(this.playersInQeueu=new JList<>(this.players()));
-        availableGames.setBounds(size.x+220, size.y, 140, 260);
-        Game.gui.add(availableGames);
+        JScrollPane players = new JScrollPane(this.playersInQeueu=new JList<>(this.players()));
+        players.setBounds(size.x+220, size.y, 140, 260);
+        Game.gui.add(players);
 		this.playersInQeueu.setBounds(0, 0, 140, 260);
 		this.playersInQeueu.setSelectedIndex(0);
 	}
 
-    private DefaultListModel<Integer> players() {
-        DefaultListModel<Integer> gamesList = new DefaultListModel<>();
-        return gamesList;
+    private DefaultListModel<String> players() {
+        DefaultListModel<String> players = new DefaultListModel<>();
+        return players;
     }
     
     @Override
@@ -83,7 +83,7 @@ public class WaitQeueuMenu implements ActionListener {
 
         if (s == this.Return) { // cancel game creation
             try {
-                Game.session.cancelGame(this.gameID);
+                Game.session.cancelLobby(this.gameID);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

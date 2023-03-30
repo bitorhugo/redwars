@@ -1,7 +1,6 @@
 package edu.ufp.inf.sd.rmi.red.client;
 
 
-import edu.ufp.inf.sd.rmi.red.client.login.LoginPanel;
 import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
@@ -10,7 +9,7 @@ import engine.Game;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.util.List;
+
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;

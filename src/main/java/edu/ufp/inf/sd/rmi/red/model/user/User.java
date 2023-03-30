@@ -61,6 +61,10 @@ public class User implements Serializable {
         return Optional.ofNullable(this.token.verifyToken());
     }
 
+    public Optional<Token> verifyToken() {
+        return Optional.ofNullable(this.token.verifyToken());
+    }
+
     public void setToken(Token token) {
         this.token = token;
     }
