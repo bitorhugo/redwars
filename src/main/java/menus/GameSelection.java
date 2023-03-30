@@ -21,8 +21,10 @@ public class GameSelection implements ActionListener {
 
     public JButton Attach = new JButton("Attach");
     public JButton Return = new JButton("Return");
+    public JButton Refresh = new JButton("Refresh");
     public JLabel PanelInfo = new JLabel("Game Selection");
     public JList<Integer> availableGamesList;
+    private JScrollPane availableGames;
 
     public GameSelection() {
         Point size = MenuHandler.PrepMenu(400, 200);
@@ -36,6 +38,7 @@ public class GameSelection implements ActionListener {
     private void SetBounds(Point size) {
 		this.Attach.setBounds(size.x, size.y+10, 100, 32);
 		this.Return.setBounds(size.x,size.y+10+38*1, 100, 32);
+        this.Refresh.setBounds(size.x, size.y = 38 * 2, 100, 32);
         this.panelInfoSetup();
 	}
 
@@ -52,16 +55,18 @@ public class GameSelection implements ActionListener {
     private void addGui() {
         Game.gui.add(this.Attach);
         Game.gui.add(this.Return);
+        Game.gui.add(this.Refresh);
         Game.gui.add(this.PanelInfo);
     }
 
     private void addActionListeners() {
         this.Attach.addActionListener(this);
         this.Return.addActionListener(this);
+        this.Refresh.addActionListener(this);
     }
 
     private void gameList(Point size) {
-        JScrollPane availableGames = new JScrollPane(this.availableGamesList = new JList<>(this.availableGames()));
+        availableGames = new JScrollPane(this.availableGamesList = new JList<>(this.availableGames()));
         availableGames.setBounds(size.x+220, size.y, 140, 260);
         Game.gui.add(availableGames);
 		this.availableGamesList.setBounds(0, 0, 140, 260);
@@ -95,6 +100,10 @@ public class GameSelection implements ActionListener {
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
+        }
+
+        if (s == this.Refresh) {
+            new GameSelection();
         }
         
     }
