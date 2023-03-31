@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.rmi.RemoteException;
 
 import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 
@@ -57,7 +58,9 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 		if (Game.GameState==Game.State.PLAYING) {
 			players.Base ply = Game.player.get(Game.btl.currentplayer);
 			
-			if (i==up) {ply.selecty--;if (ply.selecty<0) {ply.selecty++;}}
+			if (i==up) {
+                ply.selecty--;if (ply.selecty<0) {ply.selecty++;}
+            }
 			else if (i==down) {ply.selecty++;if (ply.selecty>=Game.map.height) {ply.selecty--;}}
 			else if (i==left) {ply.selectx--;if (ply.selectx<0) {ply.selectx++;}}
 			else if (i==right) {ply.selectx++;if (ply.selectx>=Game.map.width) {ply.selectx--;}}

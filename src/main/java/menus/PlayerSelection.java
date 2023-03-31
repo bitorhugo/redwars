@@ -9,7 +9,7 @@ import java.util.UUID;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import engine.Game;
-import menus.online.WaitQeueuMenu;
+import menus.online.WaitQueueMenu;
 
 
 
@@ -83,7 +83,7 @@ public class PlayerSelection implements ActionListener {
             // maybe create a queue of minimum amount of players can attach
             try {
                 UUID gameID = Game.session.createLobby(mapname);
-                new WaitQeueuMenu(gameID);
+                new WaitQueueMenu(gameID);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

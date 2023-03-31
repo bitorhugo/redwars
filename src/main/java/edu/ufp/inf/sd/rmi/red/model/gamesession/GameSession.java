@@ -15,7 +15,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
     private User owner;
     private Map<UUID, Lobby> lobbies;
-
+    
     public GameSession(User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
         owner.verifyToken();
@@ -27,7 +27,8 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void enterLobby(UUID lobby) throws RemoteException {
         this.verifyToken();
         System.out.println(this.owner.getUsername() + " is entering lobby " + lobby);
-        this.lobbies.get(lobby).addPlayers(owner.getUsername());
+        var l = this.lobbies.get(lobby);
+        l.addPlayers(owner.getUsername());
     }
 
     @Override
@@ -54,7 +55,6 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
         return this.lobbies.get(lobby);
     }
 
-
     @Override
     public UUID createLobby(String mapname) throws RemoteException {
         this.verifyToken();
@@ -68,6 +68,23 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void cancelLobby(UUID id) throws RemoteException {
         this.verifyToken();
         this.lobbies.remove(id);
+    }
+    
+    @Override
+    public void attach(UUID lobby) throws RemoteException {
+        // register session owner as observer
+
+    }
+
+    @Override
+    public void detach() throws RemoteException {
+
+    }
+
+    @Override
+    public void setState(UUID lobby) throws RemoteException {
+        // update all observers
+        this.lobbies.get(lobby).updateObservers();
     }
 
     private void verifyToken() throws RemoteGameSessionExpiredException {

@@ -22,6 +22,7 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
     private DB db;
     private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
 
+
     public GameFactoryImpl() throws RemoteException {
         super();
     }
