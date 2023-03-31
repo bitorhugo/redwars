@@ -1,9 +1,10 @@
 package edu.ufp.inf.sd.rmi.red.model.lobby;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Lobby {
+public class Lobby implements Serializable {
 
 
     private List<String> players = new ArrayList<>();
@@ -27,18 +28,18 @@ public class Lobby {
 
     // CAUTION: DURING DEV, ADDPLAYERS WILL ALLOW THE OWNER OF THE LOBBY TO ENTER AS ANTOHER PLAYER!!!!!
     private void addPlayerSmallMap(String username) {
-        if (this.players.contains(username) &&
+        if (!this.players.contains(username) &&
             this.players.size() < 2) {
             this.players.add(username);
-            System.out.println(username + " added");
+            System.out.println(username + " in lobby");
         }
     }
 
     private void addPlayerBigMap(String username) {
-        if (this.players.contains(username) &&
+        if (!this.players.contains(username) &&
             this.players.size() < 4) {
             this.players.add(username);
-            System.out.println(username + " added");
+            System.out.println(username + " in lobby");
         }        
     }
     
@@ -46,6 +47,10 @@ public class Lobby {
         if (this.players.contains(username)) {
             this.players.remove(username);
         }
+    }
+
+    public List<String> players() {
+        return this.players;
     }
     
 }

@@ -15,6 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
+import edu.ufp.inf.sd.rmi.red.model.lobby.Lobby;
 import engine.Game;
 
 
@@ -24,6 +25,7 @@ public class WaitQeueuMenu implements ActionListener {
     
     public JButton Start = new JButton("Start");
     public JButton Return = new JButton("Return");
+    public JButton Refresh = new JButton("Refresh");
     public JLabel PanelInfo = new JLabel("WaitQueue");
     public JList<String> playersInQeueu;
 
@@ -34,12 +36,13 @@ public class WaitQeueuMenu implements ActionListener {
         this.SetBounds(size);
         this.addGui();
         this.addActionListeners();
-        this.PlayerList(size);
+        this.playerList(size);
     }
 
     private void SetBounds(Point size) {
-		this.Start.setBounds(size.x, size.y+10, 100, 32);
-		this.Return.setBounds(size.x,size.y+10+38*1, 100, 32);
+		this.Start.setBounds(size.x, size.y+10+38, 100, 32);
+		this.Return.setBounds(size.x,size.y+10+38*2, 100, 32);
+        this.Refresh.setBounds(size.x, size.y+38*3, 100, 32);
         this.panelInfoSetup();
 	}
 
@@ -56,15 +59,17 @@ public class WaitQeueuMenu implements ActionListener {
     private void addGui() {
         Game.gui.add(this.Start);
         Game.gui.add(this.Return);
+        Game.gui.add(this.Refresh);
         Game.gui.add(this.PanelInfo);
     }
 
     private void addActionListeners() {
         this.Start.addActionListener(this);
         this.Return.addActionListener(this);
+        this.Refresh.addActionListener(this);
     }
 
-    private void PlayerList(Point size) {
+    private void playerList(Point size) {
         JScrollPane players = new JScrollPane(this.playersInQeueu=new JList<>(this.players()));
         players.setBounds(size.x+220, size.y, 140, 260);
         Game.gui.add(players);
@@ -74,6 +79,13 @@ public class WaitQeueuMenu implements ActionListener {
 
     private DefaultListModel<String> players() {
         DefaultListModel<String> players = new DefaultListModel<>();
+        try {
+            Game.session.lobby(this.gameID).players().forEach(player -> {
+                    players.addElement(player);
+                });;
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
         return players;
     }
     
@@ -81,14 +93,25 @@ public class WaitQeueuMenu implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         Object s = e.getSource();
 
-        if (s == this.Return) { // cancel game creation
+        if (s == this.Return) { // exit game lobby
             try {
-                Game.session.cancelLobby(this.gameID);
+                Lobby lobby = Game.session.lobby(this.gameID);
+                // if lobby has only one player, cancel lobby
+                if (lobby.players().size() == 1) {
+                    Game.session.cancelLobby(this.gameID);
+                }
+                else {
+                    Game.session.exitLobby(this.gameID);
+                }
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
             MenuHandler.CloseMenu();
             Game.gui.LoginScreen();
+        }
+
+        if (s == this.Refresh) {
+            new WaitQeueuMenu(gameID);
         }
 
         if (s == this.Start) {

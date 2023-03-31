@@ -34,12 +34,14 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public void enterLobby(UUID lobby) throws RemoteException {
         this.verifyToken();
+        System.out.println(this.owner.getUsername() + " is entering lobby " + lobby);
         this.lobbies.get(lobby).addPlayers(owner.getUsername());
     }
 
     @Override
-    public void exitLobby() throws RemoteException {
+    public void exitLobby(UUID lobby) throws RemoteException {
         this.verifyToken();
+        this.lobbies.get(lobby).removePlayer(this.owner.getUsername());
     }
 
     @Override
@@ -48,8 +50,15 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
+    public Lobby lobby(UUID lobby) throws RemoteException {
+        return this.lobbies.get(lobby);
+    }
+
+
+    @Override
     public UUID createLobby(String mapname) throws RemoteException {
         this.verifyToken();
+        System.out.println(this.owner.getUsername() + " is creating a lobby");
         UUID lobbyID = UUID.randomUUID();
         this.lobbies.put(lobbyID, new Lobby(mapname, this.owner.getUsername()));
         return lobbyID;

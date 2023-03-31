@@ -39,7 +39,7 @@ public class GameSelection implements ActionListener {
     private void SetBounds(Point size) {
 		this.Attach.setBounds(size.x, size.y+10, 100, 32);
 		this.Return.setBounds(size.x,size.y+10+38*1, 100, 32);
-        this.Refresh.setBounds(size.x, size.y = 38 * 2, 100, 32);
+        this.Refresh.setBounds(size.x, size.y+10+38*2, 100, 32);
         this.panelInfoSetup();
 	}
 
@@ -97,10 +97,10 @@ public class GameSelection implements ActionListener {
 
         if (s == this.Attach) {
             try {
-                // retrieve scroll pane option
-                // in this case will be lobby uuid
+                // get value from scroll pane
                 UUID lobbyID = this.availableGamesList.getSelectedValue();
                 Game.session.enterLobby(lobbyID);
+                new WaitQeueuMenu(lobbyID);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

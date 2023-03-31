@@ -65,34 +65,36 @@ public class RedClient extends JFrame {
     }
 
     private void login() {
-        try {
-            this.session = this.stub.login("bitor", "123");
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-        // System.out.println("------Choose Option------");
-        // System.out.println("(L) Login\t(R) Register");
-        // String choice = this.in.nextLine();
-        // System.out.println("Enter Username: ");
-        // String username = this.in.nextLine();
-        // System.out.println("Enter Secret: ");
-        // String secret = this.in.nextLine();
-        // switch (choice.toLowerCase()) {
-        // case "l":
-        //     try {
-        //         this.session = this.stub.login(username, secret);
-        //     } catch (RemoteException e) {
-        //         e.printStackTrace();
-        //     }
-        //     break;
-        // case "r":
-        //     try {
-        //         this.session = this.stub.register(username, secret);
-        //     } catch (RemoteException e) {
-        //         e.printStackTrace();
-        //     }
-        //     break;
+        // try {
+        //     this.session = this.stub.login("bitor", "123");
+        // } catch (RemoteException e) {
+        //     e.printStackTrace();
         // }
+        System.out.println("------Choose Option------");
+        System.out.println("(L) Login\t(R) Register");
+        String choice = this.in.nextLine();
+        System.out.println("Enter Username: ");
+        String username = this.in.nextLine();
+        System.out.println("Enter Secret: ");
+        String secret = this.in.nextLine();
+        switch (choice.toLowerCase()) {
+        case "l":
+            try {
+                this.session = this.stub.login(username, secret);
+                this.startGame();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            break;
+        case "r":
+            try {
+                this.session = this.stub.register(username, secret);
+                this.startGame();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            break;
+        }
     }
 
 
@@ -106,7 +108,7 @@ public class RedClient extends JFrame {
     
     public static void main(final String[] args) {
         RedClient client = new RedClient(args);
-        client.startGame();
+        // client.startGame();
     }
 }
 
