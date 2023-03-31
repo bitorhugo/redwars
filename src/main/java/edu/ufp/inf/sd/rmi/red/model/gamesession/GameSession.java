@@ -37,17 +37,16 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
-    public List<UUID> lobbies() throws RemoteException {
-        return new ArrayList<>(this.lobbies.keySet());
+    public List<Lobby> lobbies() throws RemoteException {
+        return new ArrayList<>(this.lobbies.values());
     }
 
     @Override
-    public List<UUID> lobbies(String mapname) throws RemoteException {
-        var lobbies = this.lobbies.entrySet().stream()
+    public List<Lobby> lobbies(String mapname) throws RemoteException {
+        return this.lobbies.entrySet().stream()
                                        .filter(lobby -> lobby.getValue().getMapname().compareTo(mapname) == 0)
-                                       .map(e -> e.getKey())
+                                       .map(e -> e.getValue())
                                        .collect(Collectors.toList());
-        return lobbies;
     }
 
     @Override
@@ -59,10 +58,10 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public UUID createLobby(String mapname) throws RemoteException {
         this.verifyToken();
-        System.out.println(this.owner.getUsername() + " is creating a lobby");
-        UUID lobbyID = UUID.randomUUID();
-        this.lobbies.put(lobbyID, new Lobby(mapname, this.owner.getUsername()));
-        return lobbyID;
+        Lobby l = new Lobby(mapname, this.owner.getUsername());
+        this.lobbies.put(l.getID(), l);
+        System.out.println(this.owner.getUsername() + " created lobby:" + l.getID());
+        return l.getID();
     }
 
     @Override

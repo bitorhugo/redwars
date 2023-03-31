@@ -3,20 +3,26 @@ package edu.ufp.inf.sd.rmi.red.model.lobby;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Lobby implements Serializable {
 
-
+    private UUID id;
     private List<String> players = new ArrayList<>();
     private String mapname;
     
     public Lobby(String mapname, String player) {
+        this.id = UUID.randomUUID();
         this.mapname = mapname;
         this.players.add(player);
     }
 
     public String getMapname() {
         return this.mapname;
+    }
+
+    public UUID getID() {
+        return this.id;
     }
 
     public void addPlayers(String username) {
