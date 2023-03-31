@@ -3,17 +3,15 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.rmi.RemoteException;
-import java.util.List;
 import java.util.UUID;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import engine.Game;
+import menus.online.WaitQeueuMenu;
+
+
 
 /**
  * This deals with player and battle options setup (might split it) such as npc, team, commander, starting money, turn money, fog, etc.
@@ -75,7 +73,7 @@ public class PlayerSelection implements ActionListener {
 	}
 	
 	@Override public void actionPerformed(ActionEvent e) {
-		Object s = e.getSource();
+        Object s = e.getSource();
 		if (s == Return) {
 			MenuHandler.CloseMenu();
 			Game.gui.LoginScreen();

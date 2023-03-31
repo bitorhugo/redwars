@@ -15,6 +15,10 @@ public class Lobby implements Serializable {
         this.players.add(player);
     }
 
+    public String getMapname() {
+        return this.mapname;
+    }
+
     public void addPlayers(String username) {
         switch (mapname) {
         case "SmallVs":

@@ -6,23 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import edu.ufp.inf.sd.rmi.red.model.db.GameDBI;
 import edu.ufp.inf.sd.rmi.red.model.lobby.Lobby;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
     private User owner;
-    private GameDBI db;
     private Map<UUID, Lobby> lobbies;
-
-    public GameSession(User owner, GameDBI db) throws RemoteException {
-        super();
-        owner.verifyToken();
-        this.owner = owner;
-        this.db = db;
-    }
 
     public GameSession(User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
@@ -50,6 +42,15 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
+    public List<UUID> lobbies(String mapname) throws RemoteException {
+        var lobbies = this.lobbies.entrySet().stream()
+                                       .filter(lobby -> lobby.getValue().getMapname().compareTo(mapname) == 0)
+                                       .map(e -> e.getKey())
+                                       .collect(Collectors.toList());
+        return lobbies;
+    }
+
+    @Override
     public Lobby lobby(UUID lobby) throws RemoteException {
         return this.lobbies.get(lobby);
     }
@@ -66,7 +67,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
     @Override
     public void cancelLobby(UUID id) throws RemoteException {
-        //this.verifyToken();
+        this.verifyToken();
         this.lobbies.remove(id);
     }
 

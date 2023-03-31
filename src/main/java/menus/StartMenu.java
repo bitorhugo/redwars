@@ -3,16 +3,14 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.rmi.RemoteException;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import engine.Game;
+import menus.online.GameSelection;
 
 /**
  * This is the opening menu of the game.
@@ -92,7 +90,7 @@ public class StartMenu implements ActionListener {
         }
 		else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {
-            new GameSelection();
+            new GameSelection(maps_list.getSelectedValue() + "");
         }
 		else if (s==Editor) {
 			Game.edit.StartEditor(

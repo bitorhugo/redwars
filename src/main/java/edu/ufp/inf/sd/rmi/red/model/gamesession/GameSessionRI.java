@@ -11,6 +11,7 @@ public interface GameSessionRI extends Remote {
     public void enterLobby(UUID lobby) throws RemoteException;
     public void exitLobby(UUID lobby) throws RemoteException;
     public List<UUID> lobbies() throws RemoteException;
+    public List<UUID> lobbies(String mapname) throws RemoteException;
     public Lobby lobby(UUID lobby) throws RemoteException;
     public UUID createLobby(String mapname) throws RemoteException;
     public void cancelLobby(UUID id) throws RemoteException;
