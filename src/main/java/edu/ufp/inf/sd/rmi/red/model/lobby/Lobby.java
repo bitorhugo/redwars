@@ -1,7 +1,7 @@
 package edu.ufp.inf.sd.rmi.red.model.lobby;
 
-import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 
-public class Lobby implements SubjectRI, Serializable {
+public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     private UUID id;
     private List<String> players = new ArrayList<>();
@@ -17,7 +17,8 @@ public class Lobby implements SubjectRI, Serializable {
     private String state;
     private String mapname;
     
-    public Lobby(String mapname, String player) {
+    public Lobby(String mapname, String player) throws RemoteException {
+        super();
         this.id = UUID.randomUUID();
         this.mapname = mapname;
         this.players.add(player);
@@ -27,7 +28,8 @@ public class Lobby implements SubjectRI, Serializable {
         return this.mapname;
     }
 
-    public UUID getID() {
+    @Override
+    public UUID getID() throws RemoteException {
         return this.id;
     }
 
@@ -51,7 +53,7 @@ public class Lobby implements SubjectRI, Serializable {
         }
     }
 
-    private void addPlayerBigMap(String username) {
+    private void addPlayerBigMap(String username)  {
         if (!this.players.contains(username) &&
             this.players.size() < 4) {
             this.players.add(username);
@@ -59,13 +61,14 @@ public class Lobby implements SubjectRI, Serializable {
         }        
     }
     
-    public void removePlayer(String username) {
+    public void removePlayer(String username)  {
         if (this.players.contains(username)) {
             this.players.remove(username);
         }
     }
 
-    public List<String> players() {
+    @Override
+    public List<String> players() throws RemoteException {
         return this.players;
     }
 
@@ -76,6 +79,7 @@ public class Lobby implements SubjectRI, Serializable {
     @Override
     public void attach(ObserverRI obs) throws RemoteException {
         this.observers.add(obs);
+        System.out.println(this.observers.size());
         System.out.println("Attached");
     }
 

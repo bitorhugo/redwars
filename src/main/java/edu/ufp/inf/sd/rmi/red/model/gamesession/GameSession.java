@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import edu.ufp.inf.sd.rmi.red.model.lobby.Lobby;
+import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {
@@ -24,44 +25,12 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
-    public void enterLobby(UUID lobby) throws RemoteException {
-        this.verifyToken();
-        System.out.println(this.owner.getUsername() + " is entering lobby " + lobby);
-        var l = this.lobbies.get(lobby);
-        l.addPlayers(owner.getUsername());
-    }
-
-    @Override
-    public void exitLobby(UUID lobby) throws RemoteException {
-        this.verifyToken();
-        this.lobbies.get(lobby).removePlayer(this.owner.getUsername());
-    }
-
-    @Override
-    public List<Lobby> lobbies() throws RemoteException {
-        return new ArrayList<>(this.lobbies.values());
-    }
-
-    @Override
-    public List<Lobby> lobbies(String mapname) throws RemoteException {
-        return this.lobbies.entrySet().stream()
-                                       .filter(lobby -> lobby.getValue().getMapname().compareTo(mapname) == 0)
-                                       .map(e -> e.getValue())
-                                       .collect(Collectors.toList());
-    }
-
-    @Override
-    public Lobby lobby(UUID lobby) throws RemoteException {
-        return this.lobbies.get(lobby);
-    }
-
-    @Override
-    public UUID createLobby(String mapname) throws RemoteException {
+    public SubjectRI createLobby(String mapname) throws RemoteException {
         this.verifyToken();
         Lobby l = new Lobby(mapname, this.owner.getUsername());
+        System.out.println(this.owner.getUsername() + " created lobby:" + l);
         this.lobbies.put(l.getID(), l);
-        System.out.println(this.owner.getUsername() + " created lobby:" + l.getID());
-        return l.getID();
+        return l;
     }
 
     @Override
@@ -71,20 +40,36 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
     
     @Override
-    public void attach(UUID lobby) throws RemoteException {
-        // register session owner as observer
-
+    public SubjectRI enterLobby(UUID lobby) throws RemoteException {
+        this.verifyToken();
+        System.out.println(this.owner.getUsername() + " is entering lobby " + this.lobbies.get(lobby));
+        var l = this.lobbies.get(lobby);
+        l.addPlayers(owner.getUsername());
+        return l;
     }
 
     @Override
-    public void detach() throws RemoteException {
-
+    public void exitLobby(UUID lobby) throws RemoteException {
+        this.verifyToken();
+        this.lobbies.get(lobby).removePlayer(this.owner.getUsername());
     }
 
     @Override
-    public void setState(UUID lobby) throws RemoteException {
-        // update all observers
-        this.lobbies.get(lobby).updateObservers();
+    public List<SubjectRI> lobbies() throws RemoteException {
+        return new ArrayList<>(this.lobbies.values());
+    }
+
+    @Override
+    public List<SubjectRI> lobbies(String mapname) throws RemoteException {
+        return this.lobbies.entrySet().stream()
+                                       .filter(lobby -> lobby.getValue().getMapname().compareTo(mapname) == 0)
+                                       .map(e -> e.getValue())
+                                       .collect(Collectors.toList());
+    }
+
+    @Override
+    public Lobby lobby(UUID lobby) throws RemoteException {
+        return this.lobbies.get(lobby);
     }
 
     private void verifyToken() throws RemoteGameSessionExpiredException {

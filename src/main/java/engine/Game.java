@@ -2,15 +2,13 @@ package engine;
 
 import java.awt.Dimension;
 import java.awt.Image;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
-import edu.ufp.inf.sd.rmi.red.model.lobby.Lobby;
+import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
 
 // export Game as UnicastRemoteObject
 public class Game extends JFrame {
@@ -63,7 +61,7 @@ public class Game extends JFrame {
 
     public static GameSessionRI session;
     
-    public static Lobby lobby;
+    public static SubjectRI lobby;
 
     public static ObserverImpl obs;
     

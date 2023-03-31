@@ -4,7 +4,6 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.UUID;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -82,8 +81,9 @@ public class PlayerSelection implements ActionListener {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
             try {
-                UUID gameID = Game.session.createLobby(mapname);
-                new WaitQueueMenu(gameID);
+                Game.lobby = Game.session.createLobby(mapname);
+                System.out.println(Game.lobby);
+                new WaitQueueMenu();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
