@@ -78,21 +78,10 @@ public class PlayerSelection implements ActionListener {
 			Game.gui.LoginScreen();
 		}
 		else if(s == ThunderbirdsAreGo) {
-            // here is where the new game is started
-            // maybe create a queue of minimum amount of players can attach
-
-            try {
-                Game.lobby = Game.session.createLobby(mapname);
-                System.out.println(Game.lobby);
-                new WaitQueueMenu();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-
-			// MenuHandler.CloseMenu();
-			// Game.btl.NewGame(mapname);
-			// Game.btl.AddCommanders(plyer, npc, 100, 50);
-			// Game.gui.InGameScreen();
+			MenuHandler.CloseMenu();
+			Game.btl.NewGame(mapname);
+			Game.btl.AddCommanders(plyer, npc, 100, 50);
+			Game.gui.InGameScreen();
 		}
 		for (int i = 0; i < 4; i++) {
 			if (s == Prev[i]) {

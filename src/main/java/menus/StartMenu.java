@@ -11,6 +11,7 @@ import javax.swing.JScrollPane;
 
 import engine.Game;
 import menus.online.GameSelection;
+import menus.online.OnlineMenu;
 import menus.online.PlayerSelectionOnline;
 
 /**
@@ -24,7 +25,7 @@ public class StartMenu implements ActionListener {
 	//public JButton Load = new JButton("Continue");
 	
 	//Online
-	public JButton Join = new JButton("Join");
+	public JButton Join = new JButton("Online");
 	
 	//Other
 	public JButton Editor = new JButton("Editor");
@@ -87,12 +88,12 @@ public class StartMenu implements ActionListener {
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (s==New) {
-            new PlayerSelectionOnline(true, maps_list.getSelectedValue() + "");
+            new PlayerSelection(maps_list.getSelectedValue() + "");
+            // new PlayerSelectionOnline(true, maps_list.getSelectedValue() + "");
         }
 		// else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {
-            new PlayerSelectionOnline(false, maps_list.getSelectedValue() + "");
-            // new GameSelection(maps_list.getSelectedValue() + "");
+            new OnlineMenu(maps_list.getSelectedValue() + "");
         }
 		else if (s==Editor) {
 			Game.edit.StartEditor(
