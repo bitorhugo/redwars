@@ -1,4 +1,4 @@
-package edu.ufp.inf.sd.rmi.red.model.lobby;
+package edu.ufp.inf.sd.rmi.red.server.lobby;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
-import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
+import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import menus.MenuHandler;
 
 // export Game as UnicastRemoteObject

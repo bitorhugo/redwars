@@ -11,7 +11,7 @@ import edu.ufp.inf.sd.rmi.red.model.db.DB;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSession;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.RemoteGameSessionExpiredException;
-import edu.ufp.inf.sd.rmi.red.model.lobby.Lobby;
+import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
 import edu.ufp.inf.sd.rmi.red.model.token.Token;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserAlreadyRegisteredException;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;

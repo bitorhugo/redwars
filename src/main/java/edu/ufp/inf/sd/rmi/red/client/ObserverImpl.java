@@ -3,7 +3,7 @@ package edu.ufp.inf.sd.rmi.red.client;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
+import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import engine.Game;
 
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {

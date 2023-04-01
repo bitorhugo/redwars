@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import edu.ufp.inf.sd.rmi.red.model.lobby.Lobby;
-import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
+import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
+import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {

@@ -18,7 +18,7 @@ import javax.swing.JList;
 import javax.swing.JScrollPane;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
-import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
+import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import engine.Game;
 import menus.MenuHandler;
 
