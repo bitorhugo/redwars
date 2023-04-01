@@ -15,9 +15,15 @@ function trap_sigInt() {
 
 trap 'trap_sigInt' 2
 
-# # compile first
+# compile first
 cd ${JAVAPROJ}
 mvn package
+
+# make sure that maps are available
+if [ -z "$(ls -A target/classes/maps)" ]; then
+    echo "WARING: Maps folder is empty! Copying..."
+    cp -r maps/ target/classes/
+fi
 
 cd ${CURR_DIR}
 source ${CURR_DIR}/_1_runpython.sh &
