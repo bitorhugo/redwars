@@ -11,7 +11,6 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
 import engine.Game;
 
 /**

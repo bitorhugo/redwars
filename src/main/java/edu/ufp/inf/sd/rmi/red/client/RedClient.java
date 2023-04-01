@@ -1,7 +1,7 @@
 package edu.ufp.inf.sd.rmi.red.client;
 
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
+import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 import engine.Game;

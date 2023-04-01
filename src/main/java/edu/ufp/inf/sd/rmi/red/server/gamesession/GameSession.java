@@ -1,4 +1,4 @@
-package edu.ufp.inf.sd.rmi.red.model.gamesession;
+package edu.ufp.inf.sd.rmi.red.server.gamesession;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

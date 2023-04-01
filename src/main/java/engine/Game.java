@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
+import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
 import menus.MenuHandler;
 

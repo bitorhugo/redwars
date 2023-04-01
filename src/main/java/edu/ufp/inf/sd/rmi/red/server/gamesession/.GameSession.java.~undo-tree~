@@ -1,0 +1,17 @@
+(undo-tree-save-format-version . 1)
+"ca6106501314eea4359b795a9454c0242dae5478"
+[nil nil nil nil (25631 18608 126341 153000) 0 nil]
+([nil nil ((#("    private Token token;
+    // availableGames will contain all games that were created
+    // the integer will represent the game ID
+    // the String will be the absolute path on the server where the diretory of savegame.properties file of that specific game is stored
+    // the save folder will be called 'saves' and each sub-directory name will be the ID of the game
+    // e.g.
+    // saves/" 0 4 (fontified t) 4 11 (fontified t face font-lock-keyword-face) 11 12 (fontified t) 12 16 (fontified t face font-lock-type-face) 16 17 (fontified t c-type c-decl-id-start face font-lock-type-face) 17 18 (fontified t) 18 23 (fontified t face font-lock-variable-name-face) 23 25 (fontified t) 25 29 (fontified t) 29 30 (fontified t face font-lock-comment-delimiter-face) 30 32 (fontified t face font-lock-comment-delimiter-face) 32 88 (fontified t face font-lock-comment-face) 88 92 (fontified t) 92 95 (fontified t face font-lock-comment-delimiter-face) 95 134 (fontified t face font-lock-comment-face) 134 138 (fontified t) 138 141 (fontified t face font-lock-comment-delimiter-face) 141 271 (fontified t face font-lock-comment-face) 271 275 (fontified t) 275 278 (fontified t face font-lock-comment-delimiter-face) 278 309 (fontified t face font-lock-comment-face) 309 310 (fontified t face font-lock-comment-face) 310 315 (fontified t face font-lock-comment-face) 315 316 (fontified t face font-lock-comment-face) 316 372 (fontified t face font-lock-comment-face) 372 376 (fontified t) 376 379 (fontified t face font-lock-comment-delimiter-face) 379 384 (fontified t face font-lock-comment-face) 384 388 (fontified t) 388 391 (fontified t face font-lock-comment-delimiter-face) 391 397 (fontified t face font-lock-comment-face)) . 353) (t 25631 18536 431151 555000)) ((353 . 750)) (25631 18619 150311 254000) 0 nil])
+([nil nil ((353 . 360)) ((#("adishud" 0 1 (fontified t) 1 2 (fontified t) 2 4 (fontified t) 4 7 (fontified t)) . 353)) (25631 18619 199359 44000) 0 nil])
+([nil nil ((#("adishud" 0 1 (fontified t) 1 2 (fontified t) 2 4 (fontified t) 4 7 (fontified t)) . 353) (t 25631 18621 381146 105000)) nil (25631 18624 395776 956000) 0 nil] [nil nil ((#("adishud" 0 1 (fontified t) 1 2 (fontified t) 2 4 (fontified t) 4 7 (fontified t)) . 353)) ((353 . 360)) (25631 18618 964412 340000) 0 nil])
+([nil nil ((#("
+" 0 1 (fontified t)) . 353)) nil (25631 18624 395774 424000) 0 nil])
+nil
+([nil current ((#("    //      0/savegame.properties" 0 1 (c-is-sws t fontified t) 1 4 (c-in-sws t c-is-sws t fontified t) 4 5 (c-in-sws t c-is-sws t fontified t face font-lock-comment-delimiter-face) 5 12 (c-in-sws t fontified t face font-lock-comment-delimiter-face) 12 33 (c-in-sws t fontified t face font-lock-comment-face)) . 353)) nil (25631 18624 395768 428000) 0 nil])
+nil

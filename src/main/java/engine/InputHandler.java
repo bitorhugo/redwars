@@ -8,8 +8,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.rmi.RemoteException;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSession;
-
 /**
  * Keyboard handling for the game along with the mouse setup for game handling.
  * Menus are being moved to gui.gms
