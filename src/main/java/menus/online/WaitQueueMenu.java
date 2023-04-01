@@ -36,6 +36,19 @@ public class WaitQueueMenu implements ActionListener {
         this.addActionListeners();
         this.playerList(size);
     }
+    public WaitQueueMenu(String mapname,
+                         int[]ply,
+                         boolean[]npc,
+                         int startMoney,
+                         int cityMoney) {
+        System.out.println(Game.lobby);
+        Point size = MenuHandler.PrepMenu(400, 200);
+        MenuHandler.HideBackground();
+        this.SetBounds(size);
+        this.addGui();
+        this.addActionListeners();
+        this.playerList(size);
+    }
 
     private void SetBounds(Point size) {
 		this.Start.setBounds(size.x, size.y+10, 100, 32);
@@ -68,7 +81,7 @@ public class WaitQueueMenu implements ActionListener {
     }
 
     private void playerList(Point size) {
-        JScrollPane players = new JScrollPane(this.playersInQeueu = new JList<>(this.players()));
+        JScrollPane players = new JScrollPane(this.playersInQeueu = new JList<>(players()));
         players.setBounds(size.x+220, size.y, 140, 260);
         Game.gui.add(players);
 		this.playersInQeueu.setBounds(0, 0, 140, 260);

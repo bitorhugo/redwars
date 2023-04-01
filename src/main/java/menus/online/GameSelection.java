@@ -33,8 +33,28 @@ public class GameSelection implements ActionListener {
     private String mapname;
     private Map<String, SubjectRI> lobbyNames = new HashMap<>();
 
+    private int[] plys;
+    boolean[] npc;
+    int startMoney;
+    int cityMoney;
+
     public GameSelection(String mapname) {
         this.mapname = mapname;
+        Point size = MenuHandler.PrepMenu(400, 200);
+        MenuHandler.HideBackground();
+        this.SetBounds(size);
+        this.addGui();
+        this.addActionListeners();
+        this.gameList(size);
+    }
+
+    public GameSelection(String mapname, int[] plys, boolean[]npc, int startMoney, int cityMoney) {
+        this.plys = plys;
+        this.npc = npc;
+        this.startMoney = startMoney;
+        this.cityMoney = cityMoney;
+        this.mapname = mapname;
+
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
@@ -126,15 +146,22 @@ public class GameSelection implements ActionListener {
                 UUID l = this.lobbyNames.get(selected).getID();
                 Game.lobby = Game.session.enterLobby(l);
                 System.out.println("Lobby:" + Game.lobby);
-                new PlayerSelectionOnline(this.mapname);
-                // new WaitQueueMenu();
+                new WaitQueueMenu(mapname,
+                                  plys,
+                                  npc,
+                                  startMoney,
+                                  cityMoney);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
         }
 
         if (s == this.Refresh) {
-            new GameSelection(this.mapname);
+            new GameSelection(this.mapname,
+                              this.plys,
+                              this.npc,
+                              this.startMoney,
+                              this.cityMoney);
         }
     }
     

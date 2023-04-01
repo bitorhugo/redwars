@@ -4,12 +4,19 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
+import engine.Game;
 
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
     private SubjectRI subject;
+    private Game game;
     
     public ObserverImpl(SubjectRI subject) throws RemoteException {
+        super();
+        this.subject = subject;
+    }
+
+    public ObserverImpl(SubjectRI subject, Game game) throws RemoteException {
         super();
         this.subject = subject;
     }

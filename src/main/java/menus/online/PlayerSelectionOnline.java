@@ -3,7 +3,7 @@ package menus.online;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
+import java.rmi.RemoteException;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -17,16 +17,15 @@ import menus.MenuHandler;
  * @version 0.2
  */
 public class PlayerSelectionOnline implements ActionListener {
-	//TODO: Scale with map size.
-	//Commander Selection
+
 	JButton Prev = new JButton("Prev");
 	JButton Next = new JButton("Next");
 	JLabel Name = new JLabel("Andy");
-	int[] plyer = {0,0,0,0};
+	int plyer = 0;
 	
 	//NPC Stuff
 	JButton ManOrMachine = new JButton("PLY");
-	boolean[] npc = {false};
+	boolean[] npc = {false, false, false, false};
 	
 	//Other
 	JButton Return = new JButton("Return");
@@ -36,7 +35,10 @@ public class PlayerSelectionOnline implements ActionListener {
 	
 	String mapname;
 
-	public PlayerSelectionOnline(String map) {
+    boolean brandNewGame;
+
+	public PlayerSelectionOnline(boolean brandNewGame, String map) {
+        this.brandNewGame = brandNewGame;
 		mapname = map;
 		Point size = MenuHandler.PrepMenu(400,200);
 		SetBounds(size);
@@ -65,7 +67,7 @@ public class PlayerSelectionOnline implements ActionListener {
     
 	private void AddListeners() {
         Next.addActionListener(this);
-        ManOrMachine.addActionListener(this);
+        //ManOrMachine.addActionListener(this);
         Prev.addActionListener(this);
         
 		ThunderbirdsAreGo.addActionListener(this);
@@ -78,42 +80,37 @@ public class PlayerSelectionOnline implements ActionListener {
 			MenuHandler.CloseMenu();
 			Game.gui.LoginScreen();
 		}
+
+        if (s == Prev) {
+            plyer--;
+            if (plyer<0) {
+                plyer=Game.displayC.size()-1;
+            }
+            Name.setText(Game.displayC.get(plyer).name);
+        }
+            
+        if (s == Next) {
+            plyer++;
+            if (plyer>Game.displayC.size()-1) {
+                plyer=0;
+            }
+            Name.setText(Game.displayC.get(plyer).name);
+		}
         
 		if(s == ThunderbirdsAreGo) {
-            // here is where the new game is started
-            // maybe create a queue of minimum amount of players can attach
-
-            // try {
-            //     Game.lobby = Game.session.createLobby(mapname);
-            //     System.out.println(Game.lobby);
-            //     new WaitQueueMenu();
-            // } catch (IOException e1) {
-            //     e1.printStackTrace();
-            // }
-
-			// MenuHandler.CloseMenu();
-			// Game.btl.NewGame(mapname);
-			// Game.btl.AddCommanders(plyer, npc, 100, 50);
-			// Game.gui.InGameScreen();
-		}
-
-
-		for (int i = 0; i < 4; i++) {
-			if (s == Prev) {
-				plyer[i]--;
-				if (plyer[i]<0) {plyer[i]=Game.displayC.size()-1;}
-				Name.setText(Game.displayC.get(plyer[i]).name);
-			}
-			else if (s == Next) {
-				plyer[i]++;
-				if (plyer[i]>Game.displayC.size()-1) {plyer[i]=0;}
-				Name.setText(Game.displayC.get(plyer[i]).name);
-			}
-			else if (s == ManOrMachine) {
-				npc[i]=!npc[i];
-				if (npc[i]) {ManOrMachine.setText("NPC");}
-				else {ManOrMachine.setText("PLY");}
-			}
+            int []players = {this.plyer};
+            try {
+                if (brandNewGame) {
+                    Game.lobby = Game.session.createLobby(mapname);
+                    new WaitQueueMenu(mapname, players, npc, 100, 50);
+                }
+                else {
+                    new GameSelection(mapname, players, npc, 100, 50);
+                }
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
 		}
 	}
+    
 }
