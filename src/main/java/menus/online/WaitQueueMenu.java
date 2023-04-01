@@ -128,8 +128,8 @@ public class WaitQueueMenu implements ActionListener {
         if (s == this.Start) {
             try { 
                 // set up observer
-                Game.obs = new ObserverImpl(Game.lobby);
-                Game.lobby.attach(Game.obs);
+                Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                Game.lobby.attach(true, Game.obs);
                 Game.obs.getSubject().setSate("Setting state from gui");
                 
                 // MenuHandler.CloseMenu();

@@ -17,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
+import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
 import engine.Game;
 import menus.MenuHandler;
@@ -146,11 +147,14 @@ public class GameSelection implements ActionListener {
                 UUID l = this.lobbyNames.get(selected).getID();
                 Game.lobby = Game.session.enterLobby(l);
                 System.out.println("Lobby:" + Game.lobby);
-                new WaitQueueMenu(mapname,
-                                  plys,
-                                  npc,
-                                  startMoney,
-                                  cityMoney);
+                // new WaitQueueMenu(mapname,
+                //                   plys,
+                //                   npc,
+                //                   startMoney,
+                //                   cityMoney);
+                Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                Game.lobby.attach(false, Game.obs);
+
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

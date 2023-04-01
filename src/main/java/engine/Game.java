@@ -2,6 +2,7 @@ package engine;
 
 import java.awt.Dimension;
 import java.awt.Image;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
@@ -9,6 +10,7 @@ import javax.swing.JFrame;
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.model.lobby.SubjectRI;
+import menus.MenuHandler;
 
 // export Game as UnicastRemoteObject
 public class Game extends JFrame {
@@ -60,10 +62,10 @@ public class Game extends JFrame {
 	public static List<units.Base> displayU = new ArrayList<units.Base>();
 
     public static GameSessionRI session;
-    
     public static SubjectRI lobby;
-
     public static ObserverImpl obs;
+
+    public static Game g;
     
 	public Game(GameSessionRI s) {
         super (name);
@@ -77,6 +79,8 @@ public class Game extends JFrame {
 
         // set Game session
         session = s;
+        // set static instance of Game
+        g = this;
 		//Creates all the gui elements and sets them up
 		// gui = new Gui(this);
         gui = new Gui(this);
@@ -124,6 +128,19 @@ public class Game extends JFrame {
         save.LoadSettings();
 		GameLoop();
 	}
+
+    public void startGame() {
+        try {
+            boolean []npc = {false, false, false, false};
+            int []cmds = {0, 1, 2, 3};
+            MenuHandler.CloseMenu();
+            Game.btl.NewGame(Game.lobby.getMapname());
+            Game.btl.AddCommanders(cmds, npc, 100, 50);
+            Game.gui.InGameScreen();
+        } catch(RemoteException e){
+            e.printStackTrace();
+        }
+    }
 
 
 	private void GameLoop() {

@@ -7,7 +7,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import javax.swing.JPanel;
 
-import edu.ufp.inf.sd.rmi.red.model.gamesession.GameSessionRI;
 	
 public class Gui extends JPanel {
 	private static final long serialVersionUID = 3457450162330022096L;

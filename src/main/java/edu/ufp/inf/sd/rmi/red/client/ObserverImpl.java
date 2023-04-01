@@ -19,6 +19,7 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     public ObserverImpl(SubjectRI subject, Game game) throws RemoteException {
         super();
         this.subject = subject;
+        this.game = game;
     }
 
     public SubjectRI getSubject() {
@@ -27,6 +28,12 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
     public String getLastObserverState() throws RemoteException {
         return this.subject.getSate();
+    }
+
+    @Override
+    public void startGame() throws RemoteException {
+        System.out.println(game);
+        game.startGame();
     }
 
     @Override

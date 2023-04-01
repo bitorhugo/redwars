@@ -78,10 +78,15 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     }
 
     @Override
-    public void attach(ObserverRI obs) throws RemoteException {
+    public void attach(boolean s, ObserverRI obs) throws RemoteException {
         this.observers.add(obs);
-        System.out.println(this.observers.size());
-        System.out.println("Attached");
+        System.out.println("Staring game");
+        //TODO: REFACTOR attach on players
+        // find a way to all clients start the game at once
+        // maybe implement a ready check button
+        // if all players are ready start game
+        if(s)
+            this.notifyStartGame();
     }
 
     @Override
@@ -108,6 +113,18 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
                 try {
                     System.out.println("Updating state..");
                     o.update();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            });
+    }
+
+    private void notifyStartGame() {
+        // iterate over obs list and tell them to get new state
+        this.observers.forEach(o -> {
+                try {
+                    System.out.println("Staring gmae for: " + o);
+                    o.startGame();
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
