@@ -45,7 +45,6 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         }
     }
 
-    // CAUTION: DURING DEV, ADDPLAYERS WILL ALLOW THE OWNER OF THE LOBBY TO ENTER AS ANTOHER PLAYER!!!!!
     private void addPlayerSmallMap(String username) {
         if (!this.players.contains(username) &&
             this.players.size() < 2) {
@@ -71,6 +70,10 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     @Override
     public List<String> players() throws RemoteException {
         return this.players;
+    }
+
+    public int playerCount() {
+        return this.players.size();
     }
 
     public void updateObservers() {

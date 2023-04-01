@@ -45,6 +45,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
         System.out.println(this.owner.getUsername() + " is entering lobby " + this.lobbies.get(lobby));
         var l = this.lobbies.get(lobby);
         l.addPlayers(owner.getUsername());
+        System.out.println("Lobby Player Count:" + l.playerCount());
         return l;
     }
 

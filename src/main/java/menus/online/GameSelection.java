@@ -146,14 +146,13 @@ public class GameSelection implements ActionListener {
                 String selected = this.availableGamesList.getSelectedValue();
                 UUID l = this.lobbyNames.get(selected).getID();
                 Game.lobby = Game.session.enterLobby(l);
-                System.out.println("Lobby:" + Game.lobby);
-                // new WaitQueueMenu(mapname,
-                //                   plys,
-                //                   npc,
-                //                   startMoney,
-                //                   cityMoney);
-                Game.obs = new ObserverImpl(Game.lobby, Game.g);
-                Game.lobby.attach(false, Game.obs);
+                new WaitQueueMenu(mapname,
+                                  plys,
+                                  npc,
+                                  startMoney,
+                                  cityMoney);
+                // Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                // Game.lobby.attach(false, Game.obs);
 
             } catch (RemoteException e1) {
                 e1.printStackTrace();
