@@ -62,7 +62,14 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public List<SubjectRI> lobbies(String mapname) throws RemoteException {
         return this.lobbies.entrySet().stream()
-                                       .filter(lobby -> lobby.getValue().getMapname().compareTo(mapname) == 0)
+                                       .filter(lobby -> {
+                                        try {
+                                            return lobby.getValue().getMapname().compareTo(mapname) == 0;
+                                        } catch (RemoteException e1) {
+                                            e1.printStackTrace();
+                                        }
+                                        return false;
+                                    })
                                        .map(e -> e.getValue())
                                        .collect(Collectors.toList());
     }

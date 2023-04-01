@@ -1,4 +1,4 @@
-package menus;
+package menus.online;
 
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -8,8 +8,7 @@ import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import engine.Game;
-import menus.online.WaitQueueMenu;
-
+import menus.MenuHandler;
 
 
 /**
@@ -17,17 +16,17 @@ import menus.online.WaitQueueMenu;
  * @author SergeDavid
  * @version 0.2
  */
-public class PlayerSelection implements ActionListener {
+public class PlayerSelectionOnline implements ActionListener {
 	//TODO: Scale with map size.
 	//Commander Selection
-	JButton[] Prev = {new JButton("Prev"),new JButton("Prev"),new JButton("Prev"),new JButton("Prev")};
-	JButton[] Next = {new JButton("Next"),new JButton("Next"),new JButton("Next"),new JButton("Next")};
-	JLabel[] Name = {new JLabel("Andy"),new JLabel("Andy"),new JLabel("Andy"),new JLabel("Andy")};
+	JButton Prev = new JButton("Prev");
+	JButton Next = new JButton("Next");
+	JLabel Name = new JLabel("Andy");
 	int[] plyer = {0,0,0,0};
 	
 	//NPC Stuff
-	JButton[] ManOrMachine = {new JButton("PLY"),new JButton("NPC"),new JButton("NPC"),new JButton("NPC")};
-	boolean[] npc = {false,true,true,true};
+	JButton ManOrMachine = new JButton("PLY");
+	boolean[] npc = {false};
 	
 	//Other
 	JButton Return = new JButton("Return");
@@ -37,36 +36,38 @@ public class PlayerSelection implements ActionListener {
 	
 	String mapname;
 
-	public PlayerSelection(String map) {
+	public PlayerSelectionOnline(String map) {
 		mapname = map;
 		Point size = MenuHandler.PrepMenu(400,200);
-		for (int i = 0; i < 4; i++) {
-			Prev[i].addActionListener(this);
-			Prev[i].setBounds(size.x+10+84*i, size.y+10, 64, 32);
-			Game.gui.add(Prev[i]);
-			Next[i].addActionListener(this);
-			Next[i].setBounds(size.x+10+84*i, size.y+100, 64, 32);
-			Game.gui.add(Next[i]);
-			ManOrMachine[i].addActionListener(this);
-			ManOrMachine[i].setBounds(size.x+12+84*i, size.y+68, 58, 24);
-			Game.gui.add(ManOrMachine[i]);
-			Name[i].setBounds(size.x+10+84*i, size.y+40, 64, 32);
-			Game.gui.add(Name[i]);
-		}
 		SetBounds(size);
-		AddGui();
 		AddListeners();
+        AddGui();
 	}
+    
 	private void SetBounds(Point size) {
-		ThunderbirdsAreGo.setBounds(size.x+200, size.y+170, 100, 24);
+        Next.setBounds(size.x+84*2, size.y+100, 64, 32);
+        Name.setBounds(size.x+10+84*2, size.y+40, 64, 32);
+        ManOrMachine.setBounds(size.x+2+84*2, size.y+68, 58, 24);
+        Prev.setBounds(size.x+84*2, size.y+10, 64, 32);
+        
+		ThunderbirdsAreGo.setBounds(size.x+280, size.y+170, 100, 24);
 		Return.setBounds(size.x+20, size.y+170, 100, 24);
 	}
+    
 	private void AddGui() {
-		Return.addActionListener(this);
+        Game.gui.add(Prev);
+        Game.gui.add(Next);
+        Game.gui.add(ManOrMachine);
+        Game.gui.add(Name);
 		Game.gui.add(ThunderbirdsAreGo);
 		Game.gui.add(Return);
 	}
+    
 	private void AddListeners() {
+        Next.addActionListener(this);
+        ManOrMachine.addActionListener(this);
+        Prev.addActionListener(this);
+        
 		ThunderbirdsAreGo.addActionListener(this);
 		Return.addActionListener(this);
 	}
@@ -77,38 +78,41 @@ public class PlayerSelection implements ActionListener {
 			MenuHandler.CloseMenu();
 			Game.gui.LoginScreen();
 		}
-		else if(s == ThunderbirdsAreGo) {
+        
+		if(s == ThunderbirdsAreGo) {
             // here is where the new game is started
             // maybe create a queue of minimum amount of players can attach
 
-            try {
-                Game.lobby = Game.session.createLobby(mapname);
-                System.out.println(Game.lobby);
-                new WaitQueueMenu();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            // try {
+            //     Game.lobby = Game.session.createLobby(mapname);
+            //     System.out.println(Game.lobby);
+            //     new WaitQueueMenu();
+            // } catch (IOException e1) {
+            //     e1.printStackTrace();
+            // }
 
 			// MenuHandler.CloseMenu();
 			// Game.btl.NewGame(mapname);
 			// Game.btl.AddCommanders(plyer, npc, 100, 50);
 			// Game.gui.InGameScreen();
 		}
+
+
 		for (int i = 0; i < 4; i++) {
-			if (s == Prev[i]) {
+			if (s == Prev) {
 				plyer[i]--;
 				if (plyer[i]<0) {plyer[i]=Game.displayC.size()-1;}
-				Name[i].setText(Game.displayC.get(plyer[i]).name);
+				Name.setText(Game.displayC.get(plyer[i]).name);
 			}
-			else if (s == Next[i]) {
+			else if (s == Next) {
 				plyer[i]++;
 				if (plyer[i]>Game.displayC.size()-1) {plyer[i]=0;}
-				Name[i].setText(Game.displayC.get(plyer[i]).name);
+				Name.setText(Game.displayC.get(plyer[i]).name);
 			}
-			else if (s == ManOrMachine[i]) {
+			else if (s == ManOrMachine) {
 				npc[i]=!npc[i];
-				if (npc[i]) {ManOrMachine[i].setText("NPC");}
-				else {ManOrMachine[i].setText("PLY");}
+				if (npc[i]) {ManOrMachine.setText("NPC");}
+				else {ManOrMachine.setText("PLY");}
 			}
 		}
 	}

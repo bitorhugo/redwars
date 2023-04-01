@@ -81,9 +81,10 @@ public class RedClient extends JFrame {
         case "l":
             try {
                 this.session = this.stub.login(username, secret);
+                System.out.println(session);
                 this.startGame();
-            } catch (RemoteException e) {
-                e.printStackTrace();
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
             }
             break;
         case "r":

@@ -24,7 +24,8 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this.players.add(player);
     }
 
-    public String getMapname() {
+    @Override
+    public String getMapname() throws RemoteException {
         return this.mapname;
     }
 

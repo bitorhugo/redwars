@@ -118,6 +118,11 @@ public class Battle {
 			Game.error.ShowError("The game currently supports only 4 players, not " + max + ".");
 		}
 	}
+    /**
+     * @param coms array containing players
+     * @param start player starting money
+     * @param city city starting money
+     */
 	public void AddCommanders(int[] coms, boolean[] npc, int start, int city) {
 		startingmoney = start;
 		buildingmoney = city;
