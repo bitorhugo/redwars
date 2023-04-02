@@ -68,6 +68,8 @@ public class Game extends JFrame {
     public static ObserverImpl obs;
 
     public static Game g;
+    public static String u;
+    public static int cmd;
     
 	public Game(GameFactoryRI stub) {
         super (name);
@@ -81,6 +83,8 @@ public class Game extends JFrame {
 
         // save stub for future reference
         remoteService = stub;
+        // save this game instance
+        g = this;
 
 		//Creates all the gui elements and sets them up
         gui = new Gui(this);

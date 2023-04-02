@@ -6,22 +6,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
+import edu.ufp.inf.sd.rmi.red.server.player.Player;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     private UUID id;
-    private List<String> players = new ArrayList<>();
+    // private List<Player> players = new ArrayList<>();
     private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
     private String state;
     private String mapname;
     
-    public Lobby(String mapname, String player) throws RemoteException {
+    public Lobby(String mapname, String username) throws RemoteException {
         super();
         this.id = UUID.randomUUID();
         this.mapname = mapname;
-        this.players.add(player);
     }
 
     @Override
@@ -34,46 +35,46 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         return this.id;
     }
 
-    public void addPlayers(String username) {
-        switch (mapname) {
-        case "SmallVs":
-            this.addPlayerSmallMap(username);
-            break;
-        case "FourCorners":
-            this.addPlayerBigMap(username);
-            break;
-        }
-    }
+    // public void addPlayers(String username) {
+    //     switch (mapname) {
+    //     case "SmallVs":
+    //         this.addPlayerSmallMap(username);
+    //         break;
+    //     case "FourCorners":
+    //         this.addPlayerBigMap(username);
+    //         break;
+    //     }
+    // }
 
-    private void addPlayerSmallMap(String username) {
-        if (!this.players.contains(username) &&
-            this.players.size() < 2) {
-            this.players.add(username);
-            System.out.println(username + " in lobby");
-        }
-    }
+    // private void addPlayerSmallMap(String username) {
+    //     if (!this.players.contains(username) &&
+    //         this.players.size() < 2) {
+    //         this.players.add(username);
+    //         System.out.println(username + " in lobby");
+    //     }
+    // }
 
-    private void addPlayerBigMap(String username)  {
-        if (!this.players.contains(username) &&
-            this.players.size() < 4) {
-            this.players.add(username);
-            System.out.println(username + " in lobby");
-        }        
-    }
+    // private void addPlayerBigMap(String username)  {
+    //     if (!this.players.contains(username) &&
+    //         this.players.size() < 4) {
+    //         this.players.add(username);
+    //         System.out.println(username + " in lobby");
+    //     }        
+    // }
     
-    public void removePlayer(String username)  {
-        if (this.players.contains(username)) {
-            this.players.remove(username);
-        }
-    }
+    // public void removePlayer(String username)  {
+    //     if (this.players.contains(username)) {
+    //         this.players.remove(username);
+    //     }
+    // }
 
     @Override
-    public List<String> players() throws RemoteException {
-        return this.players;
+    public List<ObserverRI> players() throws RemoteException {
+        return this.observers;
     }
 
     public int playerCount() {
-        return this.players.size();
+        return this.observers.size();
     }
 
     public void updateObservers() {
@@ -95,7 +96,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     }
 
     @Override
-    public void startGame() throws RemoteException {
+    public void startGame() throws RemoteNotEnoughPlayersException {
         if (this.check_requirements()) {
             System.out.println("INFO: Starting game");
             this.notifyStartGame();
@@ -139,18 +140,17 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
             });
     }
 
-    private boolean check_requirements() {
+    private boolean check_requirements() throws RemoteNotEnoughPlayersException {
         int playerCount = this.playerCount();
         switch (this.mapname) {
         case "FourCorners":
             if (playerCount == 4) {return true;}
-
             break;
         case "SmallVs":
             if (playerCount == 2) {return true;}
             break;
         }
-        return false;
+        throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
     
 }

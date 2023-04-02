@@ -146,8 +146,9 @@ public class GameSelection implements ActionListener {
                 String selected = this.availableGamesList.getSelectedValue();
                 UUID l = this.lobbyNames.get(selected).getID();
 
-                Game.lobby = Game.session.enterLobby(l);
-                Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                Game.lobby = Game.session.lobby(l);
+                System.out.println(Game.lobby);
+                Game.obs = new ObserverImpl(Game.u, Game.lobby, Game.g);
                 Game.lobby.attach(Game.obs);
                 
                 new WaitQueueMenu(plys,

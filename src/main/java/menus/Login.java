@@ -86,6 +86,7 @@ public class Login implements ActionListener {
             String s = secret.getText();
             try {
                 Game.session = Game.remoteService.login(u, s);
+                Game.u = u;
                 new StartMenu();
             } catch (RemoteException e1) {
                 String error = e1.getCause().toString();
@@ -98,6 +99,7 @@ public class Login implements ActionListener {
             String s = secret.getText();
             try {
                 Game.session = Game.remoteService.register(u, s);
+                Game.u = u;
                 new StartMenu();
             } catch (RemoteException e1) {
                 String error = e1.getCause().toString();

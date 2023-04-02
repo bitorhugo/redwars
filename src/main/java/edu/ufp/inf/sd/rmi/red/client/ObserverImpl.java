@@ -8,6 +8,7 @@ import engine.Game;
 
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
+    private String username;
     private SubjectRI subject;
     private Game game;
     
@@ -16,10 +17,16 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
         this.subject = subject;
     }
 
-    public ObserverImpl(SubjectRI subject, Game game) throws RemoteException {
+    public ObserverImpl(String username, SubjectRI subject, Game game) throws RemoteException {
         super();
+        this.username = username;
         this.subject = subject;
         this.game = game;
+    }
+
+    @Override
+    public String getUsername() throws RemoteException {
+        return this.username;
     }
 
     public SubjectRI getSubject() {
@@ -32,7 +39,6 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
     @Override
     public void startGame() throws RemoteException {
-        System.out.println(game);
         game.startGame();
     }
 

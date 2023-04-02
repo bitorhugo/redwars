@@ -104,7 +104,8 @@ public class PlayerSelectionOnline implements ActionListener {
             try {
                 if (brandNewGame) {
                     Game.lobby = Game.session.createLobby(mapname);
-                    Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                    System.out.println(Game.lobby);
+                    Game.obs = new ObserverImpl(Game.u, Game.lobby, Game.g);
                     Game.lobby.attach(Game.obs);
                     new WaitQueueMenu(players, npc, 100, 50);
                 }

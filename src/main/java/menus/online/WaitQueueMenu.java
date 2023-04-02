@@ -89,7 +89,11 @@ public class WaitQueueMenu implements ActionListener {
         DefaultListModel<String> players = new DefaultListModel<>();
         try {
             Game.lobby.players().forEach(player -> {
-                    players.addElement(player);
+                    try {
+                        players.addElement(player.getUsername());
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 });;
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -101,16 +105,15 @@ public class WaitQueueMenu implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         Object s = e.getSource();
 
-        if (s == this.Return) { // exit game lobby
-            System.out.println("lobby:" + Game.lobby);
-            System.out.println("obs:" + Game.obs);
+        if (s == this.Return) {
             try {
                 // if lobby has only one player, cancel lobby
                 if (Game.lobby.players().size() == 1) {
                     Game.session.cancelLobby(Game.lobby.getID());
                 }
+                // else just leave the lobby
                 else {
-                    Game.session.exitLobby(Game.lobby.getID());
+                    Game.lobby.detach(Game.obs);
                 }
                 Game.lobby.detach(Game.obs);
             } catch (RemoteException e1) {
@@ -118,8 +121,6 @@ public class WaitQueueMenu implements ActionListener {
             }
             Game.lobby = null;// set lobby to null
             Game.obs = null;  // set observer to null
-            System.out.println("lobby:" + Game.lobby);
-            System.out.println("obs:" + Game.obs);
             MenuHandler.CloseMenu();
             Game.gui.LoginScreen();
         }
@@ -133,7 +134,8 @@ public class WaitQueueMenu implements ActionListener {
                 // Start the game
                 Game.lobby.startGame();
             } catch (RemoteException e1) {
-                e1.printStackTrace();
+                String error = e1.getCause().toString();
+                Game.error.ShowError(error);
             }
         }
         
