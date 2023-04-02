@@ -145,15 +145,15 @@ public class GameSelection implements ActionListener {
                 // get value from scroll pane
                 String selected = this.availableGamesList.getSelectedValue();
                 UUID l = this.lobbyNames.get(selected).getID();
+
                 Game.lobby = Game.session.enterLobby(l);
-                new WaitQueueMenu(mapname,
-                                  plys,
+                Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                Game.lobby.attach(Game.obs);
+                
+                new WaitQueueMenu(plys,
                                   npc,
                                   startMoney,
                                   cityMoney);
-                // Game.obs = new ObserverImpl(Game.lobby, Game.g);
-                // Game.lobby.attach(false, Game.obs);
-
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

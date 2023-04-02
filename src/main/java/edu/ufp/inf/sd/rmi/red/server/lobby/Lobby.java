@@ -81,20 +81,25 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     }
 
     @Override
-    public void attach(boolean s, ObserverRI obs) throws RemoteException {
+    public void attach(ObserverRI obs) throws RemoteException {
         this.observers.add(obs);
-        System.out.println("Staring game");
-        //TODO: REFACTOR attach on players
-        // find a way to all clients start the game at once
-        // maybe implement a ready check button
-        // if all players are ready start game
-        if(s)
-            this.notifyStartGame();
+        System.out.println("INFO: " + obs + " added");
+        System.out.println("INFO: Player Count: " + this.playerCount());
     }
 
     @Override
     public void detach(ObserverRI obs) throws RemoteException {
         this.observers.remove(obs);
+        System.out.println("INFO: " + obs + " removed");
+        System.out.println("INFO: Player Count: " + this.playerCount());
+    }
+
+    @Override
+    public void startGame() throws RemoteException {
+        if (this.check_requirements()) {
+            System.out.println("INFO: Starting game");
+            this.notifyStartGame();
+        }
     }
 
     @Override
@@ -126,12 +131,26 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         // iterate over obs list and tell them to get new state
         this.observers.forEach(o -> {
                 try {
-                    System.out.println("Staring gmae for: " + o);
+                    System.out.println("INFO: Staring game for: " + o);
                     o.startGame();
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
             });
+    }
+
+    private boolean check_requirements() {
+        int playerCount = this.playerCount();
+        switch (this.mapname) {
+        case "FourCorners":
+            if (playerCount == 4) {return true;}
+
+            break;
+        case "SmallVs":
+            if (playerCount == 2) {return true;}
+            break;
+        }
+        return false;
     }
     
 }

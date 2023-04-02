@@ -14,7 +14,6 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -28,7 +27,6 @@ public class WaitQueueMenu implements ActionListener {
     public JList<String> playersInQeueu;
 
     public WaitQueueMenu() {
-        System.out.println(Game.lobby);
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
@@ -36,12 +34,11 @@ public class WaitQueueMenu implements ActionListener {
         this.addActionListeners();
         this.playerList(size);
     }
-    public WaitQueueMenu(String mapname,
-                         int[]ply,
+
+    public WaitQueueMenu(int[]ply,
                          boolean[]npc,
                          int startMoney,
                          int cityMoney) {
-        System.out.println(Game.lobby);
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
@@ -105,6 +102,8 @@ public class WaitQueueMenu implements ActionListener {
         Object s = e.getSource();
 
         if (s == this.Return) { // exit game lobby
+            System.out.println("lobby:" + Game.lobby);
+            System.out.println("obs:" + Game.obs);
             try {
                 // if lobby has only one player, cancel lobby
                 if (Game.lobby.players().size() == 1) {
@@ -113,10 +112,14 @@ public class WaitQueueMenu implements ActionListener {
                 else {
                     Game.session.exitLobby(Game.lobby.getID());
                 }
+                Game.lobby.detach(Game.obs);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
-            Game.lobby = null;
+            Game.lobby = null;// set lobby to null
+            Game.obs = null;  // set observer to null
+            System.out.println("lobby:" + Game.lobby);
+            System.out.println("obs:" + Game.obs);
             MenuHandler.CloseMenu();
             Game.gui.LoginScreen();
         }
@@ -126,19 +129,9 @@ public class WaitQueueMenu implements ActionListener {
         }
 
         if (s == this.Start) {
-            try { 
-                // set up observer
-                Game.obs = new ObserverImpl(Game.lobby, Game.g);
-                Game.lobby.attach(true, Game.obs);
-                Game.obs.getSubject().setSate("Setting state from gui");
-                
-                // MenuHandler.CloseMenu();
-                // Game.btl.NewGame(Game.lobby.getMapname());
-                // boolean []npc = {false, false, false, false};
-                // int []cmds = {0, 0, 0, 0};
-                // Game.btl.AddCommanders(cmds, npc, 100, 50);
-                // Game.gui.InGameScreen();
-                
+            try {
+                // Start the game
+                Game.lobby.startGame();
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

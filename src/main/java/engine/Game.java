@@ -8,6 +8,7 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
+import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import menus.MenuHandler;
@@ -61,13 +62,14 @@ public class Game extends JFrame {
 	public static List<buildings.Base> displayB = new ArrayList<buildings.Base>();
 	public static List<units.Base> displayU = new ArrayList<units.Base>();
 
+    public static GameFactoryRI remoteService;
     public static GameSessionRI session;
     public static SubjectRI lobby;
     public static ObserverImpl obs;
 
     public static Game g;
     
-	public Game(GameSessionRI s) {
+	public Game(GameFactoryRI stub) {
         super (name);
         //Default Settings of the JFrame
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -77,12 +79,10 @@ public class Game extends JFrame {
 		setResizable(false);
 	    setLocationRelativeTo(null);
 
-        // set Game session
-        session = s;
-        // set static instance of Game
-        g = this;
+        // save stub for future reference
+        remoteService = stub;
+
 		//Creates all the gui elements and sets them up
-		// gui = new Gui(this);
         gui = new Gui(this);
 		add(gui);
 		gui.setFocusable(true);

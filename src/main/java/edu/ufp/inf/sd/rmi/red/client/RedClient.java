@@ -31,7 +31,8 @@ public class RedClient extends JFrame {
     public RedClient (String args[]) {
         this.initContext(args);
         this.lookup();
-        this.login();
+        // this.login();
+        this.startGame();
     }
 
 
@@ -65,11 +66,6 @@ public class RedClient extends JFrame {
     }
 
     private void login() {
-        // try {
-        //     this.session = this.stub.login("bitor", "123");
-        // } catch (RemoteException e) {
-        //     e.printStackTrace();
-        // }
         System.out.println("------Choose Option------");
         System.out.println("(L) Login\t(R) Register");
         String choice = this.in.nextLine();
@@ -103,7 +99,7 @@ public class RedClient extends JFrame {
      * Starts new Game 
      */
     private void startGame() {
-        new Game(this.session);
+        new Game(this.stub);
     }
 
     

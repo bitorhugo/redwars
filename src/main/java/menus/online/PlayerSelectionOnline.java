@@ -7,6 +7,8 @@ import java.rmi.RemoteException;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+
+import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -102,7 +104,9 @@ public class PlayerSelectionOnline implements ActionListener {
             try {
                 if (brandNewGame) {
                     Game.lobby = Game.session.createLobby(mapname);
-                    new WaitQueueMenu(mapname, players, npc, 100, 50);
+                    Game.obs = new ObserverImpl(Game.lobby, Game.g);
+                    Game.lobby.attach(Game.obs);
+                    new WaitQueueMenu(players, npc, 100, 50);
                 }
                 else {
                     new GameSelection(mapname, players, npc, 100, 50);

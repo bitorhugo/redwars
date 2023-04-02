@@ -84,7 +84,6 @@ public class StartMenu implements ActionListener {
 		Options.addActionListener(this);
 		Exit.addActionListener(this);
 	}
-
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (s==New) {
