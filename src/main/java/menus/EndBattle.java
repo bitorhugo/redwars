@@ -63,6 +63,7 @@ public class EndBattle implements ActionListener {
 		if (s==Return) {
 			MenuHandler.CloseMenu();
 			Game.gui.MenuScreen();
+            Game.isOnline = false;
 		}
 	}
 }

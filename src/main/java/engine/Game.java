@@ -68,8 +68,9 @@ public class Game extends JFrame {
     public static ObserverImpl obs;
 
     public static Game g;
-    public static String u;
-    public static int cmd;
+    public static boolean isOnline = false;
+    public static String u; // username
+    public static int cmd; // commander selected by client
     
 	public Game(GameFactoryRI stub) {
         super (name);

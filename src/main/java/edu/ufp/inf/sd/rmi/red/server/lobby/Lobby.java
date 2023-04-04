@@ -5,11 +5,10 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
-import edu.ufp.inf.sd.rmi.red.server.player.Player;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 

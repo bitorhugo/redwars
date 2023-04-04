@@ -53,6 +53,7 @@ public class Pause implements ActionListener {
 		if (s==Quit) {
 			MenuHandler.CloseMenu();
 			Game.gui.MenuScreen();
+            Game.isOnline = false;
 		}
 		else if (s==EndTurn) {
 			MenuHandler.CloseMenu();

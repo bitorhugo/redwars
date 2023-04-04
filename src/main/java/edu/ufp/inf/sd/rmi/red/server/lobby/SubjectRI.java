@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
+import engine.Game;
 
 public interface SubjectRI extends Remote {
     public List<ObserverRI> players() throws RemoteException;
