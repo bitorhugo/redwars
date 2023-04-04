@@ -9,6 +9,7 @@ import engine.Game;
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
     private String username;
+    private int commander;
     private SubjectRI subject;
     private Game game;
     

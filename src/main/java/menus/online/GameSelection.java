@@ -137,7 +137,7 @@ public class GameSelection implements ActionListener {
 
         if (s == this.Return) {
             MenuHandler.CloseMenu();
-            Game.gui.LoginScreen();
+            Game.gui.MenuScreen();
         }
 
         if (s == this.Enter) {

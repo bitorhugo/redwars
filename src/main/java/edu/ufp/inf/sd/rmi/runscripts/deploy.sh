@@ -21,8 +21,9 @@ mvn package
 
 # make sure that maps are available
 if [ -z "$(ls -A target/classes/maps)" ]; then
-    echo "WARING: Maps folder is empty! Copying..."
+    echo "WARING: Mapsand/or saves folder is empty! Copying..."
     cp -r maps/ target/classes/
+    cp -r saves/ taget/classes/
 fi
 
 cd ${CURR_DIR}

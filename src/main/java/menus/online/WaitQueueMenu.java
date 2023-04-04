@@ -122,7 +122,7 @@ public class WaitQueueMenu implements ActionListener {
             Game.lobby = null;// set lobby to null
             Game.obs = null;  // set observer to null
             MenuHandler.CloseMenu();
-            Game.gui.LoginScreen();
+            Game.gui.MenuScreen();
         }
 
         if (s == this.Refresh) {

@@ -37,6 +37,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void cancelLobby(UUID id) throws RemoteException {
         this.verifyToken();
         this.lobbies.remove(id);
+        System.out.println("INFO: Lobby " + id + " deleted");
     }
     
     // @Override

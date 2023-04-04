@@ -7,12 +7,14 @@ import engine.Game;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
 import java.rmi.RemoteException;
 import java.awt.Point;
 
-public class Login implements ActionListener {
+public class Login implements ActionListener, KeyListener {
     public JTextField username = new JTextField("Username");
     public JTextField secret = new JTextField("Secret");
     public JButton Login = new JButton("Login");
@@ -44,6 +46,7 @@ public class Login implements ActionListener {
 	}
 
 	private void AddListeners() {
+        username.addKeyListener(this);
         username.addFocusListener(new FocusListener(){
                 @Override
                 public void focusGained(FocusEvent arg0) {
@@ -58,6 +61,7 @@ public class Login implements ActionListener {
                     }
                 }
             });
+        secret.addKeyListener(this);
         secret.addFocusListener(new FocusListener(){
                 @Override
                 public void focusGained(FocusEvent arg0) {
@@ -109,5 +113,28 @@ public class Login implements ActionListener {
 
         if (src == Exit) {System.exit(0);}
     }
+
+    @Override
+    public void keyPressed(KeyEvent arg0) {
+        char c = arg0.getKeyChar(); // retrieve keyboard input from user
+        if (c == '\n' || c == '\r') {
+            String u = username.getText();
+            String s = secret.getText();
+            try {
+                Game.session = Game.remoteService.login(u, s);
+                Game.u = u;
+                new StartMenu();
+            } catch (RemoteException e1) {
+                String error = e1.getCause().toString();
+                Game.error.ShowError(error);
+            }
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent arg0) {}
+
+    @Override
+    public void keyTyped(KeyEvent arg0) {}
     
 }

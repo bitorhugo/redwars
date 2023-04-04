@@ -106,7 +106,7 @@ public class EditorMenu implements ActionListener {
 			MenuHandler.CloseMenu();
 		}
 		else if (s==Quit) {
-			Game.gui.LoginScreen();
+			Game.gui.MenuScreen();
 		}
 	}
 }

@@ -37,6 +37,12 @@ public class Gui extends JPanel {
         new menus.Login();
 		if (Game.error.showing) {add(Game.error);}
 	}
+    public void MenuScreen() {
+        Game.GameState=Game.State.MENU;
+        removeAll();
+        new menus.StartMenu();
+        if (Game.error.showing) {add(Game.error);}
+    }
 	/**Creates the InGame screen layout*/
 	public void InGameScreen() {
 		removeAll();

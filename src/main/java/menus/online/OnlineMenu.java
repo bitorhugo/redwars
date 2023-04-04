@@ -58,7 +58,7 @@ public class OnlineMenu implements ActionListener {
 
         if (s == Return) {
             MenuHandler.CloseMenu();
-            Game.gui.LoginScreen();
+            Game.gui.MenuScreen();
         }
     }
     

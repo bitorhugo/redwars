@@ -55,7 +55,6 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 		if (i==exit) {System.exit(0);}
 		if (Game.GameState==Game.State.PLAYING) {
 			players.Base ply = Game.player.get(Game.btl.currentplayer);
-			
 			if (i==up) {
                 ply.selecty--;if (ply.selecty<0) {ply.selecty++;}
             }
@@ -78,7 +77,7 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 			}
 		}
 		
-		if (i==dev1) {Game.gui.LoginScreen();}
+		if (i==dev1) {Game.gui.MenuScreen();}
 		else if (i==dev2) {Game.load.LoadTexturePack("Test");}
 		else if (i==dev3) {
 			DevPathing++;

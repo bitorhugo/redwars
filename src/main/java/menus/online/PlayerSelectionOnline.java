@@ -80,7 +80,7 @@ public class PlayerSelectionOnline implements ActionListener {
         Object s = e.getSource();
 		if (s == Return) {
 			MenuHandler.CloseMenu();
-			Game.gui.LoginScreen();
+			Game.gui.MenuScreen();
 		}
 
         if (s == Prev) {

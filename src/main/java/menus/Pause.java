@@ -52,7 +52,7 @@ public class Pause implements ActionListener {
 		Object s = e.getSource();
 		if (s==Quit) {
 			MenuHandler.CloseMenu();
-			Game.gui.LoginScreen();
+			Game.gui.MenuScreen();
 		}
 		else if (s==EndTurn) {
 			MenuHandler.CloseMenu();

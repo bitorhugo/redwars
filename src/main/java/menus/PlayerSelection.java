@@ -75,7 +75,7 @@ public class PlayerSelection implements ActionListener {
         Object s = e.getSource();
 		if (s == Return) {
 			MenuHandler.CloseMenu();
-			Game.gui.LoginScreen();
+			Game.gui.MenuScreen();
 		}
 		else if(s == ThunderbirdsAreGo) {
 			MenuHandler.CloseMenu();
