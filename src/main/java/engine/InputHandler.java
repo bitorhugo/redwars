@@ -56,6 +56,7 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 		if (Game.GameState==Game.State.PLAYING) {
 			players.Base ply = Game.player.get(Game.btl.currentplayer);
 			if (i==up) {
+                
                 ply.selecty--;if (ply.selecty<0) {ply.selecty++;}
             }
 			else if (i==down) {ply.selecty++;if (ply.selecty>=Game.map.height) {ply.selecty--;}}
