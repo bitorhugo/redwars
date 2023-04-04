@@ -5,7 +5,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
@@ -108,6 +107,8 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         System.out.println("State in lobby updated, notifying others");
         this.notifyObservers();
     }
+
+    
 
     @Override
     public String getSate() throws RemoteException {

@@ -14,6 +14,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import engine.Game;
 
 /**
@@ -90,21 +93,26 @@ public class City implements ActionListener,ListSelectionListener {
 		Units.addListSelectionListener(this);
 	}
 	
-	
-	@Override public void actionPerformed(ActionEvent e) {
-		Object s = e.getSource();
-		if (s==Return) {MenuHandler.CloseMenu();}
-		else if (s==Buy) {
-            //TODO: send to server city info
-            // try {
-            //     Game.obs.getSubject().setSate("buy");
-            // } catch (RemoteException e1) {
-            //     e1.printStackTrace();
-            // }
-			Game.btl.Buyunit(ids[Units.getSelectedIndex()], x, y);
-			MenuHandler.CloseMenu();
-		}
-	}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object s = e.getSource();
+        if (s == Return) {
+            MenuHandler.CloseMenu();
+        } else if (s == Buy) {
+            if (Game.isOnline) {
+                try {
+                    Game.obs.getSubject().setSate("buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y);
+                } catch (RemoteException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            else {
+                Game.btl.Buyunit(ids[Units.getSelectedIndex()], x, y);
+                MenuHandler.CloseMenu();
+            }
+        }
+    }
+
 	@Override public void valueChanged(ListSelectionEvent e) {
 		Object s = e.getSource();
 		if (s == Units) {

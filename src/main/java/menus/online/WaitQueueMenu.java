@@ -133,7 +133,6 @@ public class WaitQueueMenu implements ActionListener {
             try {
                 // Start the game
                 Game.lobby.startGame();
-                Game.isOnline = true;
             } catch (RemoteException e1) {
                 String error = e1.getCause().toString();
                 Game.error.ShowError(error);

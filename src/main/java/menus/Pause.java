@@ -3,6 +3,8 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
+
 import javax.swing.JButton;
 import engine.Game;
 
@@ -56,8 +58,17 @@ public class Pause implements ActionListener {
             Game.isOnline = false;
 		}
 		else if (s==EndTurn) {
-			MenuHandler.CloseMenu();
-			Game.btl.EndTurn();
+            if (Game.isOnline) {
+                try {
+                    Game.obs.getSubject().setSate("endturn");
+                } catch (RemoteException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            else {
+                MenuHandler.CloseMenu();
+                Game.btl.EndTurn();
+            }
 		}
 		else if (s==Resume) {MenuHandler.CloseMenu();}
 		else if (s==Save) {Game.save.SaveGame();}

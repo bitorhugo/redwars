@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import engine.Game;
+import menus.MenuHandler;
 
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
@@ -41,13 +42,14 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     @Override
     public void startGame() throws RemoteException {
         game.startGame();
+        game.isOnline = true;
     }
 
     @Override
     public void update() throws RemoteException {
+        String state = this.getLastObserverState();
         if (Game.GameState == Game.State.PLAYING) {
             var ply = Game.player.get(Game.btl.currentplayer);
-            String state = this.getLastObserverState();
             switch (state) {
             case "up":
                 ply.selecty--;
@@ -82,11 +84,19 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
             case "start":
                 new menus.Pause();
                 break;
+            case "endturn":
+                MenuHandler.CloseMenu();
+                Game.btl.EndTurn();
+                break;
+            default:
+                String[] params = state.split(":");
+                Game.btl.Buyunit(Integer.parseInt(params[1]),
+                                 Integer.parseInt(params[2]),
+                                 Integer.parseInt(params[3]));
+                MenuHandler.CloseMenu();
             }
         }
         if (Game.GameState == Game.State.EDITOR) {
-            var ply = Game.player.get(Game.btl.currentplayer);
-            String state = this.getLastObserverState();
             switch (state) {
             case "up":
                 Game.edit.selecty--;if (Game.edit.selecty<0) {Game.edit.selecty++;} Game.edit.moved = true;
