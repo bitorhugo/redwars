@@ -2,10 +2,12 @@ package menus.online;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
 import java.awt.Point;
 
 import javax.swing.JButton;
 
+import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -49,11 +51,19 @@ public class OnlineMenu implements ActionListener {
         Object s = e.getSource();
 
         if (s == New) {
-            new PlayerSelectionOnline(true, this.mapname);
+            try {
+                Game.lobby = Game.session.createLobby(mapname);
+                System.out.println("INFO: New lobby created: " + Game.lobby);
+                Game.obs = new ObserverImpl(Game.u, Game.cmd, Game.lobby, Game.g);
+                Game.lobby.attach(Game.obs);                // attach observer to lobby
+                new WaitQueueMenu();
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
         }
 
         if (s == Search) {
-            new PlayerSelectionOnline(false, mapname);
+            new GameSelection(mapname);
         }
 
         if (s == Return) {

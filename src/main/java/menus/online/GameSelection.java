@@ -34,28 +34,8 @@ public class GameSelection implements ActionListener {
     private String mapname;
     private Map<String, SubjectRI> lobbyNames = new HashMap<>();
 
-    private int[] plys;
-    boolean[] npc;
-    int startMoney;
-    int cityMoney;
-
     public GameSelection(String mapname) {
         this.mapname = mapname;
-        Point size = MenuHandler.PrepMenu(400, 200);
-        MenuHandler.HideBackground();
-        this.SetBounds(size);
-        this.addGui();
-        this.addActionListeners();
-        this.gameList(size);
-    }
-
-    public GameSelection(String mapname, int[] plys, boolean[]npc, int startMoney, int cityMoney) {
-        this.plys = plys;
-        this.npc = npc;
-        this.startMoney = startMoney;
-        this.cityMoney = cityMoney;
-        this.mapname = mapname;
-
         Point size = MenuHandler.PrepMenu(400, 200);
         MenuHandler.HideBackground();
         this.SetBounds(size);
@@ -142,30 +122,19 @@ public class GameSelection implements ActionListener {
 
         if (s == this.Enter) {
             try {
-                // get value from scroll pane
                 String selected = this.availableGamesList.getSelectedValue();
-                UUID l = this.lobbyNames.get(selected).getID();
-
+                UUID l = this.lobbyNames.get(selected).getID();                // get value from scroll pane
                 Game.lobby = Game.session.lobby(l);
-                System.out.println(Game.lobby);
-                Game.obs = new ObserverImpl(Game.u, Game.lobby, Game.g);
+                System.out.println("INFO: Selected lobby " + Game.lobby);
+                Game.obs = new ObserverImpl(Game.u, Game.cmd, Game.lobby, Game.g);
                 Game.lobby.attach(Game.obs);
-                
-                new WaitQueueMenu(plys,
-                                  npc,
-                                  startMoney,
-                                  cityMoney);
+                new WaitQueueMenu();
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
         }
-
         if (s == this.Refresh) {
-            new GameSelection(this.mapname,
-                              this.plys,
-                              this.npc,
-                              this.startMoney,
-                              this.cityMoney);
+            new GameSelection(mapname);
         }
     }
     

@@ -33,39 +33,6 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         return this.id;
     }
 
-    // public void addPlayers(String username) {
-    //     switch (mapname) {
-    //     case "SmallVs":
-    //         this.addPlayerSmallMap(username);
-    //         break;
-    //     case "FourCorners":
-    //         this.addPlayerBigMap(username);
-    //         break;
-    //     }
-    // }
-
-    // private void addPlayerSmallMap(String username) {
-    //     if (!this.players.contains(username) &&
-    //         this.players.size() < 2) {
-    //         this.players.add(username);
-    //         System.out.println(username + " in lobby");
-    //     }
-    // }
-
-    // private void addPlayerBigMap(String username)  {
-    //     if (!this.players.contains(username) &&
-    //         this.players.size() < 4) {
-    //         this.players.add(username);
-    //         System.out.println(username + " in lobby");
-    //     }        
-    // }
-    
-    // public void removePlayer(String username)  {
-    //     if (this.players.contains(username)) {
-    //         this.players.remove(username);
-    //     }
-    // }
-
     @Override
     public List<ObserverRI> players() throws RemoteException {
         return this.observers;
@@ -108,13 +75,10 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this.notifyObservers();
     }
 
-    
-
     @Override
     public String getSate() throws RemoteException {
         return this.state;
     }
-
 
     private void notifyObservers() {
         // iterate over obs list and tell them to get new state

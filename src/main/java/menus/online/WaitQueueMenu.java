@@ -35,18 +35,6 @@ public class WaitQueueMenu implements ActionListener {
         this.playerList(size);
     }
 
-    public WaitQueueMenu(int[]ply,
-                         boolean[]npc,
-                         int startMoney,
-                         int cityMoney) {
-        Point size = MenuHandler.PrepMenu(400, 200);
-        MenuHandler.HideBackground();
-        this.SetBounds(size);
-        this.addGui();
-        this.addActionListeners();
-        this.playerList(size);
-    }
-
     private void SetBounds(Point size) {
 		this.Start.setBounds(size.x, size.y+10, 100, 32);
 		this.Refresh.setBounds(size.x,size.y+10+38*1, 100, 32);

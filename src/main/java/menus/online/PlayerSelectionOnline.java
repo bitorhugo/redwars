@@ -3,12 +3,10 @@ package menus.online;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.rmi.RemoteException;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
-import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -23,7 +21,7 @@ public class PlayerSelectionOnline implements ActionListener {
 	JButton Prev = new JButton("Prev");
 	JButton Next = new JButton("Next");
 	JLabel Name = new JLabel("Andy");
-	int plyer = 0;
+	int commander = 0; // commander chosen
 	
 	//NPC Stuff
 	JButton ManOrMachine = new JButton("PLY");
@@ -36,11 +34,8 @@ public class PlayerSelectionOnline implements ActionListener {
 	JButton ThunderbirdsAreGo = new JButton ("Start");
 	
 	String mapname;
-
-    boolean brandNewGame;
-
-	public PlayerSelectionOnline(boolean brandNewGame, String map) {
-        this.brandNewGame = brandNewGame;
+    
+    public PlayerSelectionOnline(String map) {
 		mapname = map;
 		Point size = MenuHandler.PrepMenu(400,200);
 		SetBounds(size);
@@ -84,37 +79,25 @@ public class PlayerSelectionOnline implements ActionListener {
 		}
 
         if (s == Prev) {
-            plyer--;
-            if (plyer<0) {
-                plyer=Game.displayC.size()-1;
+            commander--;
+            if (commander<0) {
+                commander=Game.displayC.size()-1;
             }
-            Name.setText(Game.displayC.get(plyer).name);
+            Name.setText(Game.displayC.get(commander).name);
         }
             
         if (s == Next) {
-            plyer++;
-            if (plyer>Game.displayC.size()-1) {
-                plyer=0;
+            commander++;
+            if (commander>Game.displayC.size()-1) {
+                commander=0;
             }
-            Name.setText(Game.displayC.get(plyer).name);
+            Name.setText(Game.displayC.get(commander).name);
 		}
         
 		if(s == ThunderbirdsAreGo) {
-            int []players = {this.plyer};
-            try {
-                if (brandNewGame) {
-                    Game.lobby = Game.session.createLobby(mapname);
-                    System.out.println(Game.lobby);
-                    Game.obs = new ObserverImpl(Game.u, Game.lobby, Game.g);
-                    Game.lobby.attach(Game.obs);
-                    new WaitQueueMenu(players, npc, 100, 50);
-                }
-                else {
-                    new GameSelection(mapname, players, npc, 100, 50);
-                }
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
+            Game.cmd = this.commander; // set commander
+            System.out.println("INFO: Commader chosen: " + Game.displayC.get(commander).name);
+            new OnlineMenu(mapname);
 		}
 	}
     

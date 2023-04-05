@@ -19,9 +19,10 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
         this.subject = subject;
     }
 
-    public ObserverImpl(String username, SubjectRI subject, Game game) throws RemoteException {
+    public ObserverImpl(String username, int commander, SubjectRI subject, Game game) throws RemoteException {
         super();
         this.username = username;
+        this.commander = commander;
         this.subject = subject;
         this.game = game;
     }
@@ -30,6 +31,11 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     public String getUsername() throws RemoteException {
         return this.username;
     }
+
+    @Override
+    public int getCommander() throws RemoteException {
+        return this.commander;
+    }    
 
     public SubjectRI getSubject() {
         return this.subject;
@@ -89,36 +95,12 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
                 Game.btl.EndTurn();
                 break;
             default:
+                // TODO: Find a way to handle buy state
                 String[] params = state.split(":");
                 Game.btl.Buyunit(Integer.parseInt(params[1]),
                                  Integer.parseInt(params[2]),
                                  Integer.parseInt(params[3]));
                 MenuHandler.CloseMenu();
-            }
-        }
-        if (Game.GameState == Game.State.EDITOR) {
-            switch (state) {
-            case "up":
-                Game.edit.selecty--;if (Game.edit.selecty<0) {Game.edit.selecty++;} Game.edit.moved = true;
-                break;
-            case "down":
-                Game.edit.selecty++;if (Game.edit.selecty>=Game.map.height) {Game.edit.selecty--;} Game.edit.moved = true;
-                break;
-            case "left":
-                Game.edit.selectx--;if (Game.edit.selectx<0) {Game.edit.selectx++;} Game.edit.moved = true;
-                break;
-            case "right":
-                Game.edit.selectx++;if (Game.edit.selectx>=Game.map.width) {Game.edit.selectx--;} Game.edit.moved = true;
-                break;
-            case "select":
-                Game.edit.holding = true;
-                break;
-            case "cancel":
-                Game.edit.ButtButton();
-                break;
-            case "start":
-                new menus.EditorMenu();
-                break;
             }
         }
     }

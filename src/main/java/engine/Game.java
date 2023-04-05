@@ -5,6 +5,8 @@ import java.awt.Image;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.swing.JFrame;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
@@ -67,7 +69,7 @@ public class Game extends JFrame {
     public static SubjectRI lobby;
     public static ObserverImpl obs;
 
-    public static Game g;
+    public static Game g; // self reference
     public static boolean isOnline = false;
     public static String u; // username
     public static int cmd; // commander selected by client
@@ -136,8 +138,14 @@ public class Game extends JFrame {
 
     public void startGame() {
         try {
-            boolean []npc = {false, false, false, false};
-            int []cmds = {0, 1, 2, 3};
+            boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
+            // TODO: update commanders to players choices
+            // maybe loop over lobbies observers and retrieve its commanders
+            int[] cmds = new int[4];
+            var obs = Game.lobby.players();
+            for (int i = 0; i < obs.size(); i++) {
+                cmds[i] = obs.get(i).getCommander();
+            }
             MenuHandler.CloseMenu();
             Game.btl.NewGame(Game.lobby.getMapname());
             Game.btl.AddCommanders(cmds, npc, 100, 50);

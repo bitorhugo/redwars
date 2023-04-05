@@ -20,8 +20,8 @@ import menus.online.PlayerSelectionOnline;
  * @version 0.2
  */
 public class StartMenu implements ActionListener {
-	//Single Player
-	public JButton New = new JButton("New Game");
+	//Offline
+	public JButton New = new JButton("Offline");
 	//public JButton Load = new JButton("Continue");
 	
 	//Online
@@ -92,7 +92,8 @@ public class StartMenu implements ActionListener {
         }
 		// else if (s==Load) {Game.save.LoadGame();MenuHandler.CloseMenu();}
 		else if (s==Join) {
-            new OnlineMenu(maps_list.getSelectedValue() + "");
+            new PlayerSelectionOnline(maps_list.getSelectedValue() + "");
+            // new OnlineMenu(maps_list.getSelectedValue() + "");
         }
 		else if (s==Editor) {
 			Game.edit.StartEditor(
