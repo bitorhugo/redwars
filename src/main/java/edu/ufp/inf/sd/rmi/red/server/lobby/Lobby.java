@@ -2,6 +2,7 @@ package edu.ufp.inf.sd.rmi.red.server.lobby;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,7 +63,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     public void startGame() throws RemoteNotEnoughPlayersException {
         if (this.check_requirements()) {
             System.out.println("INFO: Starting game");
-            this.ring = new TokenRing(this.observers.size()); // initialize token ring
+            this.ring = new TokenRing(Clock.systemUTC(), this.observers.size()); // initialize token ring
             this.notifyStartGame();
         }
     }
@@ -84,6 +85,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         if (state.compareTo("endturn") == 0) {
             this.ring.passToken();
         }
+        //TODO: Implement RemoteNotHoldingTokenException
     }
 
     @Override
