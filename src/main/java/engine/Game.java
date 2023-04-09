@@ -139,22 +139,22 @@ public class Game extends JFrame {
     public void startGame() {
         try {
             boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
-            // TODO: update commanders to players choices
-            // maybe loop over lobbies observers and retrieve its commanders
+
             int[] cmds = new int[4];
             var obs = Game.lobby.players();
             for (int i = 0; i < obs.size(); i++) {
                 cmds[i] = obs.get(i).getCommander();
             }
+
             MenuHandler.CloseMenu();
             Game.btl.NewGame(Game.lobby.getMapname());
             Game.btl.AddCommanders(cmds, npc, 100, 50);
             Game.gui.InGameScreen();
+            
         } catch(RemoteException e){
             e.printStackTrace();
         }
     }
-
 
 	private void GameLoop() {
 		boolean loop=true;

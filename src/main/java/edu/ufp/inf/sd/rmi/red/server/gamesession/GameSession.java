@@ -34,27 +34,17 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     }
 
     @Override
-    public void cancelLobby(UUID id) throws RemoteException {
+    public void deleteLobby(UUID id) throws RemoteException {
         this.verifyToken();
-        this.lobbies.remove(id);
-        System.out.println("INFO: Lobby " + id + " deleted");
+        if(this.lobbies.containsKey(id)) {
+            this.lobbies.remove(id);
+            System.out.println("INFO: Lobby " + id + " deleted");
+        }
+        else {
+            System.out.println("Lobby not present");
+        }
     }
     
-    // @Override
-    // public SubjectRI enterLobby(UUID lobby) throws RemoteException {
-    //     this.verifyToken();
-    //     System.out.println(this.owner.getUsername() + " is entering lobby " + this.lobbies.get(lobby));
-    //     var l = this.lobbies.get(lobby);
-    //     l.addPlayers(owner.getUsername());
-    //     return l;
-    // }
-
-    // @Override
-    // public void exitLobby(UUID lobby) throws RemoteException {
-    //     this.verifyToken();
-    //     this.lobbies.get(lobby).removePlayer(this.owner.getUsername());
-    // }
-
     @Override
     public List<SubjectRI> lobbies() throws RemoteException {
         return new ArrayList<>(this.lobbies.values());

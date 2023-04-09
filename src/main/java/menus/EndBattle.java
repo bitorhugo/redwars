@@ -3,6 +3,8 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
+
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 
@@ -64,6 +66,13 @@ public class EndBattle implements ActionListener {
 			MenuHandler.CloseMenu();
 			Game.gui.MenuScreen();
             Game.isOnline = false;
+            try {
+                Game.lobby.detach(Game.obs);
+                Game.session.deleteLobby(Game.lobby.getID());
+            } catch (RemoteException e1) {
+                System.err.println("Failed to detach at End of Game");
+                e1.printStackTrace();
+            }
 		}
 	}
 }

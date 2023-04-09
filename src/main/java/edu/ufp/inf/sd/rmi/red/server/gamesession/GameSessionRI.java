@@ -9,7 +9,7 @@ import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 
 public interface GameSessionRI extends Remote {
     public SubjectRI createLobby(String mapname) throws RemoteException;
-    public void cancelLobby(UUID id) throws RemoteException;
+    public void deleteLobby(UUID id) throws RemoteException;
     // public SubjectRI enterLobby(UUID lobby) throws RemoteException;
     // public void exitLobby(UUID lobby) throws RemoteException;
     public List<SubjectRI> lobbies() throws RemoteException;

@@ -15,7 +15,6 @@ import javax.swing.JTextArea;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import engine.Game;
 

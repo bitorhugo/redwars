@@ -42,10 +42,6 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         return this.observers.size();
     }
 
-    public void updateObservers() {
-        
-    }
-
     @Override
     public void attach(ObserverRI obs) throws RemoteException {
         this.observers.add(obs);

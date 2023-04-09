@@ -97,7 +97,7 @@ public class WaitQueueMenu implements ActionListener {
             try {
                 // if lobby has only one player, cancel lobby
                 if (Game.lobby.players().size() == 1) {
-                    Game.session.cancelLobby(Game.lobby.getID());
+                    Game.session.deleteLobby(Game.lobby.getID());
                 }
                 // else just leave the lobby
                 else {
