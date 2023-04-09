@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
+import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
@@ -16,6 +17,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
     private String state;
     private String mapname;
+    private TokenRing ring;
     
     public Lobby(String mapname, String username) throws RemoteException {
         super();
@@ -60,6 +62,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     public void startGame() throws RemoteNotEnoughPlayersException {
         if (this.check_requirements()) {
             System.out.println("INFO: Starting game");
+            this.ring = new TokenRing(this.observers.size()); // initialize token ring
             this.notifyStartGame();
         }
     }
@@ -69,6 +72,20 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this.state = state;
         System.out.println("State in lobby updated, notifying others");
         this.notifyObservers();
+    }
+    
+    @Override
+    public synchronized void setSate(String state, ObserverRI obs) throws RemoteException {
+        //TODO: check to see if observer who called this is the current tokenHolder
+        System.out.println(obs);
+        if (this.ring.getTokenHolder() == this.observers.indexOf(obs)) {
+            this.state = state;
+            System.out.println("State in lobby updated, notifying others");
+            this.notifyObservers();
+        }
+        else {
+            System.out.println("Hold up buddy, not your turn");
+        }
     }
 
     @Override

@@ -62,24 +62,24 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 
                 if (i == up) {
                     // ply.selecty--;if (ply.selecty<0) {ply.selecty++;}
-                    Game.obs.getSubject().setSate("up");
+                    Game.obs.getSubject().setSate("up", Game.obs);
                 } else if (i == down) {
-                    Game.obs.getSubject().setSate("down");
+                    Game.obs.getSubject().setSate("down", Game.obs);
                     // ply.selecty++;if (ply.selecty>=Game.map.height) {ply.selecty--;}
                 } else if (i == left) {
-                    Game.obs.getSubject().setSate("left");
+                    Game.obs.getSubject().setSate("left", Game.obs);
                     // ply.selectx--;if (ply.selectx<0) {ply.selectx++;}
                 } else if (i == right) {
-                    Game.obs.getSubject().setSate("right");
+                    Game.obs.getSubject().setSate("right", Game.obs);
                     // ply.selectx++;if (ply.selectx>=Game.map.width) {ply.selectx--;}
                 } else if (i == select) {
-                    Game.obs.getSubject().setSate("select");
+                    Game.obs.getSubject().setSate("select", Game.obs);
                     // Game.btl.Action();
                 } else if (i == cancel) {
-                    Game.obs.getSubject().setSate("cancel");
+                    Game.obs.getSubject().setSate("cancel", Game.obs);
                     // Game.player.get(Game.btl.currentplayer).Cancle();
                 } else if (i == start) {
-                    Game.obs.getSubject().setSate("start");
+                    Game.obs.getSubject().setSate("start", Game.obs);
                     // new menus.Pause();
                 }
 
