@@ -76,15 +76,13 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     
     @Override
     public synchronized void setSate(String state, ObserverRI obs) throws RemoteException {
-        //TODO: check to see if observer who called this is the current tokenHolder
-        System.out.println(obs);
         if (this.ring.getTokenHolder() == this.observers.indexOf(obs)) {
             this.state = state;
             System.out.println("State in lobby updated, notifying others");
             this.notifyObservers();
         }
-        else {
-            System.out.println("Hold up buddy, not your turn");
+        if (state.compareTo("endturn") == 0) {
+            this.ring.passToken();
         }
     }
 

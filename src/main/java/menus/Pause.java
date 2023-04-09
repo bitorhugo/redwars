@@ -60,7 +60,7 @@ public class Pause implements ActionListener {
 		else if (s==EndTurn) {
             if (Game.isOnline) {
                 try {
-                    Game.obs.getSubject().setSate("endturn");
+                    Game.obs.getSubject().setSate("endturn", Game.obs);
                 } catch (RemoteException e1) {
                     e1.printStackTrace();
                 }
