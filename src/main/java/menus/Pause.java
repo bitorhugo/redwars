@@ -71,6 +71,7 @@ public class Pause implements ActionListener {
             }
 		}
 		else if (s==Resume) {MenuHandler.CloseMenu();}
+        //TODO: notify observers on resume
 		else if (s==Save) {Game.save.SaveGame();}
 		else if (s==Options) {new Options();}
 	}
