@@ -1,7 +1,6 @@
 package edu.ufp.inf.sd.rmi.red.client;
 
 
-import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 import engine.Game;
@@ -10,28 +9,23 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JFrame;
 
 
 /**
  * @author Vitor Santos
  */
-public class RedClient extends JFrame {
+public class RedClient {
     // RedClient is the base Frame of GUI
 
     private SetupContextRMI contextRMI;
     private GameFactoryRI stub;
-    private GameSessionRI session;
-    private Scanner in = new Scanner(System.in);
 
     public RedClient (String args[]) {
         this.initContext(args);
         this.lookup();
-        // this.login();
         this.startGame();
     }
 
@@ -65,36 +59,6 @@ public class RedClient extends JFrame {
         }
     }
 
-    private void login() {
-        System.out.println("------Choose Option------");
-        System.out.println("(L) Login\t(R) Register");
-        String choice = this.in.nextLine();
-        System.out.println("Enter Username: ");
-        String username = this.in.nextLine();
-        System.out.println("Enter Secret: ");
-        String secret = this.in.nextLine();
-        switch (choice.toLowerCase()) {
-        case "l":
-            try {
-                this.session = this.stub.login(username, secret);
-                System.out.println(session);
-                this.startGame();
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
-            break;
-        case "r":
-            try {
-                this.session = this.stub.register(username, secret);
-                this.startGame();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-            break;
-        }
-    }
-
-
     /**
      * Starts new Game 
      */
@@ -104,8 +68,7 @@ public class RedClient extends JFrame {
 
     
     public static void main(final String[] args) {
-        RedClient client = new RedClient(args);
-        // client.startGame();
+        new RedClient(args);
     }
 }
 
