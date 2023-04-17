@@ -56,6 +56,15 @@ public class Pause implements ActionListener {
 			MenuHandler.CloseMenu();
 			Game.gui.MenuScreen();
             Game.isOnline = false;
+            try {
+                Game.lobby.detach(Game.obs);
+                if (Game.lobby.players().size() == 0) {
+                    //TODO: handle deletion of lobby in server
+                    Game.session.deleteLobby(Game.lobby.getID());
+                }
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
 		}
 		else if (s==EndTurn) {
             if (Game.isOnline) {
@@ -71,7 +80,6 @@ public class Pause implements ActionListener {
             }
 		}
 		else if (s==Resume) {MenuHandler.CloseMenu();}
-        //TODO: notify observers on resume
 		else if (s==Save) {Game.save.SaveGame();}
 		else if (s==Options) {new Options();}
 	}
