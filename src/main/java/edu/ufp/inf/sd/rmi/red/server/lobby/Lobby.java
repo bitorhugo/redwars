@@ -108,9 +108,10 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
                 this.state = state;
                 System.out.println("State in lobby updated, notifying others");
                 this.notifyObservers();
-                if (state.compareTo("endturn") == 0) {
-                    this.ring.passToken();
-                }
+
+            }
+            if (state.compareTo("endturn") == 0) {
+                this.ring.passToken();
             }
         }
         else {

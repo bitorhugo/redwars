@@ -60,6 +60,35 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     @Override
     public void update() throws RemoteException {
         String state = this.getLastObserverState();
+        this.handleState(state);
+    }
+
+    private void listen(String EXCHANGE_NAME) {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        try {
+            Connection connection = factory.newConnection();
+            Channel channel = connection.createChannel();
+
+            channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, EXCHANGE_NAME, "");
+
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+                this.handleState(message);
+            };
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+        } catch (Exception e) {
+            System.out.println("ERROR:");
+            e.printStackTrace();
+        }
+    }
+
+    private void handleState(String state) {
         if (Game.GameState == Game.State.PLAYING) {
             var ply = Game.player.get(Game.btl.currentplayer);
             switch (state) {
@@ -101,38 +130,13 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
                 Game.btl.EndTurn();
                 break;
             default:
-                // TODO: Find a way to handle buy state
                 String[] params = state.split(":");
                 Game.btl.Buyunit(Integer.parseInt(params[1]),
                                  Integer.parseInt(params[2]),
                                  Integer.parseInt(params[3]));
                 MenuHandler.CloseMenu();
             }
-        }
-    }
-
-    public void listen(String EXCHANGE_NAME) {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        try {
-            Connection connection = factory.newConnection();
-            Channel channel = connection.createChannel();
-
-            channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
-            String queueName = channel.queueDeclare().getQueue();
-            channel.queueBind(queueName, EXCHANGE_NAME, "");
-
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println(" [x] Received '" + message + "'");
-            };
-            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
-        } catch (Exception e) {
-            System.out.println("ERROR:");
-            e.printStackTrace();
-        }
+        }        
     }
     
 }
