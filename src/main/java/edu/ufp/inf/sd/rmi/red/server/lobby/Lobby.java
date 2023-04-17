@@ -1,17 +1,14 @@
 package edu.ufp.inf.sd.rmi.red.server.lobby;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
@@ -29,18 +26,22 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     private String mapname;
     private TokenRing ring;
 
-    public Lobby(Connection rabbitConnection, String mapname, String username) throws RemoteException {
+    public Lobby(Channel rabbitChannel, String mapname, String username) throws RemoteException {
         super();
         this.id = UUID.randomUUID();
         this.mapname = mapname;
         this.EXCHANGE_NAME = this.id.toString();
-        this.channel = this.createRabbitChannel(rabbitConnection).orElseThrow();
+        this.channel = rabbitChannel;
     }
     
     public Lobby(String mapname, String username) throws RemoteException {
         super();
         this.id = UUID.randomUUID();
         this.mapname = mapname;
+    }
+
+    public Channel getRabbitChannel() {
+        return this.channel;
     }
 
     @Override
@@ -147,17 +148,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
 
+    
 
-    private Optional<Channel> createRabbitChannel(Connection conn) {
-        Channel chan;
-        try {
-            chan = conn.createChannel();
-            chan.exchangeDeclare(this.EXCHANGE_NAME, EXCHANGE_TYPE);
-        } catch (IOException e) {
-            chan = null;
-            System.err.println("Not able to open channel for RabbitMQ");
-        }
-        return Optional.ofNullable(chan);
-    }
     
 }
