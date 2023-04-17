@@ -71,7 +71,7 @@ public class Pause implements ActionListener {
                 try {
                     Game.obs.getSubject().setSate("endturn", Game.obs);
                 } catch (RemoteException e1) {
-                    e1.printStackTrace();
+                    System.out.println(e1.getMessage());
                 }
             }
             else {

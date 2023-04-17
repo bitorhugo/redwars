@@ -138,7 +138,7 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
             }
 
         } catch (RemoteException e1) {
-            e1.printStackTrace();
+            System.out.println(e1.getMessage());
         }
     }
 
