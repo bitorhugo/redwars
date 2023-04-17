@@ -79,8 +79,8 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
                     Game.obs.getSubject().setSate("cancel", Game.obs);
                     // Game.player.get(Game.btl.currentplayer).Cancle();
                 } else if (i == start) {
-                    Game.obs.getSubject().setSate("start", Game.obs);
-                    // new menus.Pause();
+                    // Game.obs.getSubject().setSate("start", Game.obs);
+                    new menus.Pause();
                 }
 
             }
