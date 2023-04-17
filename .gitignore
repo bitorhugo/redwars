@@ -4,3 +4,5 @@ saves/
 sqlite*
 src/main/java/engine/.Game.java.~undo-tree~
 src/main/java/engine/.InputHandler.java.~undo-tree~
+main
+main.db        
