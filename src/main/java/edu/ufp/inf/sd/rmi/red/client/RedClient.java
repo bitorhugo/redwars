@@ -68,6 +68,7 @@ public class RedClient {
 
     
     public static void main(final String[] args) {
+        System.out.println("CP " + System.getProperty("java.class.path"));
         new RedClient(args);
     }
 }

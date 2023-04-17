@@ -14,7 +14,6 @@ import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     private UUID id;
-    // private List<Player> players = new ArrayList<>();
     private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
     private String state;
     private String mapname;
