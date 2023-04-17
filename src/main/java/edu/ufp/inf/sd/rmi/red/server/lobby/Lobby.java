@@ -1,23 +1,41 @@
 package edu.ufp.inf.sd.rmi.red.server.lobby;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
+    // rabbit stuff
+    private Channel channel;
+    private String EXCHANGE_NAME;
+    private final static String EXCHANGE_TYPE = "fanout";
+    
     private UUID id;
     private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
     private String state;
     private String mapname;
     private TokenRing ring;
+
+    public Lobby(Connection rabbitConnection, String mapname, String username) throws RemoteException {
+        super();
+        this.id = UUID.randomUUID();
+        this.mapname = mapname;
+        this.EXCHANGE_NAME = this.id.toString();
+        this.channel = this.createRabbitChannel(rabbitConnection).orElseThrow();
+    }
     
     public Lobby(String mapname, String username) throws RemoteException {
         super();
@@ -105,7 +123,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     }
 
     private void notifyStartGame() {
-        // iterate over obs list and tell them to get new state
+        // iterate over obs list and tell them to start the game
         this.observers.forEach(o -> {
                 try {
                     System.out.println("INFO: Staring game for: " + o);
@@ -127,6 +145,19 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
             break;
         }
         throw new RemoteNotEnoughPlayersException("Not enough Players");
+    }
+
+
+    private Optional<Channel> createRabbitChannel(Connection conn) {
+        Channel chan;
+        try {
+            chan = conn.createChannel();
+            chan.exchangeDeclare(this.EXCHANGE_NAME, EXCHANGE_TYPE);
+        } catch (IOException e) {
+            chan = null;
+            System.err.println("Not able to open channel for RabbitMQ");
+        }
+        return Optional.ofNullable(chan);
     }
     
 }

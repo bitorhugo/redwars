@@ -8,15 +8,26 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.rabbitmq.client.Connection;
+
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
 import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
 import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
+    private Connection rabbitConnection;
     private User owner;
     private Map<UUID, Lobby> lobbies;
-    
+
+    public GameSession(Connection rabbitConnection, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
+        super();
+        owner.verifyToken();
+        this.rabbitConnection = rabbitConnection;
+        this.owner = owner;
+        this.lobbies = lobbies;
+    }
+
     public GameSession(User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
         owner.verifyToken();
@@ -27,7 +38,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public SubjectRI createLobby(String mapname) throws RemoteException {
         this.verifyToken();
-        Lobby l = new Lobby(mapname, this.owner.getUsername());
+        Lobby l = new Lobby(rabbitConnection, mapname, this.owner.getUsername());
         System.out.println(this.owner.getUsername() + " created lobby:" + l);
         this.lobbies.put(l.getID(), l);
         return l;

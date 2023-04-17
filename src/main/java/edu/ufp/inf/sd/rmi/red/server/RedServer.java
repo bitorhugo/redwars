@@ -5,9 +5,16 @@ import edu.ufp.inf.sd.rmi.red.server.RedServer;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
+
+import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 
 /**
  * <p>
@@ -26,7 +33,7 @@ public class RedServer {
 
     private SetupContextRMI contextRMI;
     private GameFactoryRI stub;
-    
+    private Connection rabbitConnection;
     /**
      * 
      * @param args 
@@ -40,6 +47,7 @@ public class RedServer {
             String serviceName = args[2];
             //============ Create a context for RMI setup ============
             this.contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
+            this.rabbitConnection = createConnection(args[0]).orElseThrow();
         } catch (RemoteException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, e);
         }
@@ -49,7 +57,7 @@ public class RedServer {
         try {
             //Bind service on rmiregistry and wait for calls
             if (this.contextRMI.getRegistry() != null) {
-                this.stub = new GameFactoryImpl(new DB("/home/bitor/projects/redwars/main.db"));
+                this.stub = new GameFactoryImpl(this.rabbitConnection, new DB("/home/bitor/projects/redwars/main.db"));
                 //Get service url (including servicename)
                 String serviceUrl = this.contextRMI.getServicesUrl(0);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "going MAIL_TO_ADDR rebind service @ {0}", serviceUrl);
@@ -64,6 +72,18 @@ public class RedServer {
         }
     }
 
+    private Optional<Connection> createConnection(String host) {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(host);
+        Connection conn;
+        try {
+            conn = factory.newConnection();
+        } catch (IOException | TimeoutException e) {
+            conn = null;
+            System.err.println("ERROR: Not able to open connection with RabbitMQ Services");
+        }
+        return Optional.ofNullable(conn);
+    }
 
 
     public static void main(String[] args) {
@@ -71,6 +91,7 @@ public class RedServer {
             System.err.println("usage: java [options] edu.ufp.sd._02_calculator.server.CalculatorServer <rmi_registry_ip> <rmi_registry_port> <service_name>");
             System.exit(-1);
         }
+
         RedServer red = new RedServer(args);
         red.rebindService();
     }
