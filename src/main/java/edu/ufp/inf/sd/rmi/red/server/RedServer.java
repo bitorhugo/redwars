@@ -31,9 +31,12 @@ import com.rabbitmq.client.ConnectionFactory;
  */
 public class RedServer {
 
+    private Connection conn;
+    
     private SetupContextRMI contextRMI;
     private GameFactoryRI stub;
-    private Connection rabbitConnection;
+
+
     /**
      * 
      * @param args 
@@ -47,7 +50,7 @@ public class RedServer {
             String serviceName = args[2];
             //============ Create a context for RMI setup ============
             this.contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
-            this.rabbitConnection = createConnection(args[0]).orElseThrow();
+            this.conn = createConnection(args[0]).orElseThrow();
         } catch (RemoteException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, e);
         }
@@ -57,7 +60,7 @@ public class RedServer {
         try {
             //Bind service on rmiregistry and wait for calls
             if (this.contextRMI.getRegistry() != null) {
-                this.stub = new GameFactoryImpl(this.rabbitConnection, new DB("/home/bitor/projects/redwars/main.db"));
+                this.stub = new GameFactoryImpl(this.conn, new DB("/home/bitor/projects/redwars/main.db"));
                 //Get service url (including servicename)
                 String serviceUrl = this.contextRMI.getServicesUrl(0);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "going MAIL_TO_ADDR rebind service @ {0}", serviceUrl);

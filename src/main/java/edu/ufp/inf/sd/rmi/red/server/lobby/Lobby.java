@@ -15,11 +15,11 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
+import edu.ufp.inf.sd.rmi.red.server.tokenring.RemoteNotCurrentTokenHolderException;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
-    // rabbit stuff
     private Channel channel;
     private String EXCHANGE_NAME;
     private final static String EXCHANGE_TYPE = "fanout";
@@ -30,12 +30,10 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     private String mapname;
     private TokenRing ring;
 
-    public Lobby(Connection rabbitConnection, String mapname, String username) throws RemoteException {
-        super();
-        this.id = UUID.randomUUID();
-        this.mapname = mapname;
+    public Lobby(Connection conn, String mapname, String username) throws RemoteException {
+        this(mapname, username);
         this.EXCHANGE_NAME = this.id.toString();
-        this.channel = this.createRabbitChannel(rabbitConnection).orElseThrow();
+        this.channel = this.createRabbitChannel(conn).orElseThrow();
     }
     
     public Lobby(String mapname, String username) throws RemoteException {
@@ -99,23 +97,24 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     
     @Override
     public synchronized void setSate(String state, ObserverRI obs) throws RemoteException {
-        if (this.channel != null) { // rabbit implementation
-            try {
-                this.channel.basicPublish(EXCHANGE_NAME, "", null, state.getBytes("UTF-8"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        
-        else {
-            if (this.ring.getTokenHolder() == this.observers.indexOf(obs)) {
+        if (this.ring.getTokenHolder() == this.observers.indexOf(obs)) {
+            if (this.channel != null) { // rabbit implementation
+                try {
+                    this.channel.basicPublish(EXCHANGE_NAME, "", null, state.getBytes("UTF-8"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
                 this.state = state;
                 System.out.println("State in lobby updated, notifying others");
                 this.notifyObservers();
+                if (state.compareTo("endturn") == 0) {
+                    this.ring.passToken();
+                }
             }
-            if (state.compareTo("endturn") == 0) {
-                this.ring.passToken();
-            }        //TODO: Implement RemoteNotHoldingTokenException
+        }
+        else {
+            throw new RemoteNotCurrentTokenHolderException("Your are not holding the token");
         }
     }
 
@@ -165,6 +164,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         Channel chan;
         try {
             chan = conn.createChannel();
+            chan.exchangeDeclare(EXCHANGE_NAME, EXCHANGE_TYPE);
         } catch (IOException e) {
             chan = null;
             System.err.println("Not able to open channel for RabbitMQ");

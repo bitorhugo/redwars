@@ -54,7 +54,7 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     public void startGame(String EXCHANGE_NAME) throws RemoteException {
         game.startGame();
         game.isOnline = true;
-        listen(EXCHANGE_NAME);
+        this.listen(EXCHANGE_NAME); // start listening for incoming queue messages
     }
 
     @Override

@@ -1,17 +1,13 @@
 package edu.ufp.inf.sd.rmi.red.server.gamesession;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
@@ -20,14 +16,14 @@ import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
-    private Connection rabbitConnection;
+    private Connection conn;
     private User owner;
     private Map<UUID, Lobby> lobbies;
 
-    public GameSession(Connection rabbitConnection, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
+    public GameSession(Connection conn, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
         owner.verifyToken();
-        this.rabbitConnection = rabbitConnection;
+        this.conn = conn;
         this.owner = owner;
         this.lobbies = lobbies;
     }
@@ -42,7 +38,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public SubjectRI createLobby(String mapname) throws RemoteException {
         this.verifyToken();
-        Lobby l = new Lobby(rabbitConnection, mapname,
+        Lobby l = new Lobby(this.conn, mapname,
                             this.owner.getUsername());
         System.out.println(this.owner.getUsername() + " created lobby:" + l);
         this.lobbies.put(l.getID(), l);
