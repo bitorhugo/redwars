@@ -1,14 +1,18 @@
 package edu.ufp.inf.sd.rmi.red.server.lobby;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
@@ -26,12 +30,12 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     private String mapname;
     private TokenRing ring;
 
-    public Lobby(Channel rabbitChannel, String mapname, String username) throws RemoteException {
+    public Lobby(Connection rabbitConnection, String mapname, String username) throws RemoteException {
         super();
         this.id = UUID.randomUUID();
         this.mapname = mapname;
         this.EXCHANGE_NAME = this.id.toString();
-        this.channel = rabbitChannel;
+        this.channel = this.createRabbitChannel(rabbitConnection).orElseThrow();
     }
     
     public Lobby(String mapname, String username) throws RemoteException {
@@ -95,15 +99,24 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     
     @Override
     public synchronized void setSate(String state, ObserverRI obs) throws RemoteException {
-        if (this.ring.getTokenHolder() == this.observers.indexOf(obs)) {
-            this.state = state;
-            System.out.println("State in lobby updated, notifying others");
-            this.notifyObservers();
+        if (this.channel != null) { // rabbit implementation
+            try {
+                this.channel.basicPublish(EXCHANGE_NAME, "", null, state.getBytes("UTF-8"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        if (state.compareTo("endturn") == 0) {
-            this.ring.passToken();
+        
+        else {
+            if (this.ring.getTokenHolder() == this.observers.indexOf(obs)) {
+                this.state = state;
+                System.out.println("State in lobby updated, notifying others");
+                this.notifyObservers();
+            }
+            if (state.compareTo("endturn") == 0) {
+                this.ring.passToken();
+            }        //TODO: Implement RemoteNotHoldingTokenException
         }
-        //TODO: Implement RemoteNotHoldingTokenException
     }
 
     @Override
@@ -128,7 +141,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this.observers.forEach(o -> {
                 try {
                     System.out.println("INFO: Staring game for: " + o);
-                    o.startGame();
+                    o.startGame(this.EXCHANGE_NAME);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -148,7 +161,24 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
 
-    
+    public Optional<Channel> createRabbitChannel(Connection conn) {
+        Channel chan;
+        try {
+            chan = conn.createChannel();
+        } catch (IOException e) {
+            chan = null;
+            System.err.println("Not able to open channel for RabbitMQ");
+        }
+        return Optional.ofNullable(chan);
+    }
+
+    public void deleteRabbitChannel(Channel chan) {
+        try {
+            chan.close();
+        } catch (IOException | TimeoutException e) {
+            e.printStackTrace();
+        }
+    }    
 
     
 }

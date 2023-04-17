@@ -42,8 +42,8 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public SubjectRI createLobby(String mapname) throws RemoteException {
         this.verifyToken();
-        Lobby l = new Lobby(this.createRabbitChannel(rabbitConnection).orElseThrow(), mapname,
-                this.owner.getUsername());
+        Lobby l = new Lobby(rabbitConnection, mapname,
+                            this.owner.getUsername());
         System.out.println(this.owner.getUsername() + " created lobby:" + l);
         this.lobbies.put(l.getID(), l);
         return l;
@@ -53,7 +53,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void deleteLobby(UUID id) throws RemoteException {
         this.verifyToken();
         if(this.lobbies.containsKey(id)) {
-            this.deleteRabbitChannel( this.lobbies.get(id).getRabbitChannel());
+            this.lobbies.get(id).deleteRabbitChannel(this.lobbies.get(id).getRabbitChannel());
             this.lobbies.remove(id);
             System.out.println("INFO: Lobby " + id + " deleted");
         }
@@ -91,23 +91,6 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
         owner.verifyToken();
     }
 
-    private Optional<Channel> createRabbitChannel(Connection conn) {
-        Channel chan;
-        try {
-            chan = conn.createChannel();
-        } catch (IOException e) {
-            chan = null;
-            System.err.println("Not able to open channel for RabbitMQ");
-        }
-        return Optional.ofNullable(chan);
-    }
 
-    private void deleteRabbitChannel(Channel chan) {
-        try {
-            chan.close();
-        } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
-        }
-    }
 
 }
