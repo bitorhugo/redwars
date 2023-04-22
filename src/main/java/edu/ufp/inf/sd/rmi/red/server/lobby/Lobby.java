@@ -170,12 +170,14 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
             chan = null;
             System.err.println("Not able to open channel for RabbitMQ");
         }
+        System.out.println("INFO: Channel created " + chan);
         return Optional.ofNullable(chan);
     }
 
     public void deleteRabbitChannel(Channel chan) {
         try {
             chan.close();
+            System.out.println("INFO: Channel closed " + chan);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }

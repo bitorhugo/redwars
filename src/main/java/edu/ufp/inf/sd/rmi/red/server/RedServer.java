@@ -90,11 +90,11 @@ public class RedServer {
 
 
     public static void main(String[] args) {
+        // TODO: add clusters to build 3 servers
         if (args != null && args.length < 3) {
             System.err.println("usage: java [options] edu.ufp.sd._02_calculator.server.CalculatorServer <rmi_registry_ip> <rmi_registry_port> <service_name>");
             System.exit(-1);
         }
-
         RedServer red = new RedServer(args);
         red.rebindService();
     }

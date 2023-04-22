@@ -6,7 +6,7 @@ cd "${ABSPATH2CLASSES}"
 jackc="/home/bitor/projects/redwars/dependencies/jackson-core-2.13.2.jar"
 jackd="/home/bitor/projects/redwars/dependencies/jackson-databind-2.13.2.2.jar"
 rabbit="/home/bitor/projects/redwars/dependencies/amqp-client-5.17.0.jar"
-slf="/home/bitor/projects/redwars/dependencies/slf4j-api-1.7.36.jar"
+slf="/home/bitor/projects/redwars/dependencies/slf4j-api-1.7.30.jar"
 
 
 java -cp ${CLASSPATH}":"${jackc}":"${jackd}":"${rabbit}":"${slf}\

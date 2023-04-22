@@ -23,7 +23,7 @@ mvn package
 if [ -z "$(ls -A target/classes/maps)" ]; then
     echo "WARING: Mapsand/or saves folder is empty! Copying..."
     cp -r maps/ target/classes/
-    cp -r saves/ taget/classes/
+    cp -r saves/ target/classes/
 fi
 
 cd ${CURR_DIR}
@@ -34,10 +34,3 @@ while [[ 1 ]]; do
     source ${CURR_DIR}/_3_runserver.sh 
     sleep infinity
 done
-
-
-# echo "Press 'Y' to run Client!"
-#     read  input
-#     case ${input} in
-#         [Yy]) source ${JAVAPROJ}/src/edu/ufp/inf/sd/rmi/_02_calculator/runscripts/_4_runclient.sh;
-#     esac
