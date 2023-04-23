@@ -61,28 +61,30 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
             if (Game.GameState == Game.State.PLAYING) {
                 players.Base ply = Game.player.get(Game.btl.currentplayer);
 
+                var obs = Game.obs.getId();
+                
                 if (key == up) {
-                    String message = "up";
+                    String message = obs + ";up";
                     Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == down) {
-                    String message = "down";
+                    String message = obs + ";down";
                     Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == left) {
-                    String message = "left";
+                    String message = obs + ";left";
                     Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == right) {
-                    String message = "right";
+                    String message = obs + ";right";
                     Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == select) {
-                    String message = "select";
+                    String message = obs + ";select";
                     Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == cancel) {
-                    String message = "cancel";
+                    String message = obs + ";cancel";
                     Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == start) {

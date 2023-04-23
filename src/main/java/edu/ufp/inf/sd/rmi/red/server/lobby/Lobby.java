@@ -23,7 +23,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     // client -> server channel
     private Channel channelClientServer;
-    private String WQ_QUEUE_NAME = "hello";
+    private String WQ_QUEUE_NAME;
 
     // server -> client channel
     private Channel channelServerClient;
@@ -41,6 +41,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this(mapname, username);
 
         // create client -> server channel
+        this.WQ_QUEUE_NAME = this.id.toString();
         this.channelClientServer = this.createClientServerChannel(conn).orElseThrow();
 
         // create server -> client channel
@@ -175,22 +176,17 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
             
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 // String is composed of {observer_index;command}
-                // String []message = new String(delivery.getBody(), "UTF-8").split(";");
-                String message = new String(delivery.getBody(), "UTF-8");
+                String []message = new String(delivery.getBody(), "UTF-8").split(";");
 
-                // int obs = Integer.parseInt(message[0]);
-                // String msg = message[1];
-
-                // System.out.println(" [x] Received 'obs=" + obs + "' msg=" + msg + "'");
-                System.out.println(" [x] Received '" + message + "'");
+                int obs = Integer.parseInt(message[0]);
+                String msg = message[1];
                 
-                try {
-                    // send command to all clients
-                    this.channelServerClient.basicPublish(FANOUT_EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                System.out.println(" [x] Received 'obs=" + obs + "' msg=" + msg + "'");
 
+                if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
+                    // send command to all clients
+                    this.channelServerClient.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
+                }
             };
             this.channelClientServer.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
         } catch (IOException e) {

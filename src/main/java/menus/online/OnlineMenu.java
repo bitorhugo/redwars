@@ -54,7 +54,8 @@ public class OnlineMenu implements ActionListener {
             try {
                 Game.lobby = Game.session.createLobby(mapname);
                 System.out.println("INFO: New lobby created: " + Game.lobby);
-                Game.obs = new ObserverImpl(Game.u, Game.cmd, Game.lobby, Game.g);
+                int id = Game.lobby.players().size();
+                Game.obs = new ObserverImpl(id, Game.u, Game.cmd, Game.lobby, Game.g);
                 Game.lobby.attach(Game.obs);                // attach observer to lobby
                 new WaitQueueMenu();
             } catch (RemoteException e1) {

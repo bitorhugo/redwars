@@ -19,22 +19,30 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     private Connection conn; // connection for rabbit
     private Channel channel; // channel for rabbit work qeueu
     private String WQ_QUEUE_NAME;
+    
     private String username;
     private int commander;
     private SubjectRI subject;
+    private final int id;
     private Game game;
     
-    public ObserverImpl(String username, int commander, Game game) throws RemoteException {
+    public ObserverImpl(int id, String username, int commander, Game game) throws RemoteException {
         super();
         this.username = username;
         this.commander = commander;
         this.game = game;
+        this.id = id;
     }
 
-    public ObserverImpl(String username, int commander, SubjectRI subject, Game game) throws RemoteException {
-        this(username, commander, game);
+    public ObserverImpl(int id, String username, int commander, SubjectRI subject, Game game) throws RemoteException {
+        this(id, username, commander, game);
         this.subject = subject;
         this.bindQeueu();
+    }
+
+    @Override
+    public int getId() throws RemoteException {
+        return this.id;
     }
 
     @Override
