@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
 import java.rmi.RemoteException;
 
 /**
@@ -51,96 +52,179 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 
 	int DevPathing = 1;
 
-    private void handleOnlineInput(KeyEvent e) {
+    private void handleOnlineInputRabbit(KeyEvent e) {
         try {
-            int i = e.getKeyCode();
-            if (i == exit) {
-                System.exit(0);
-            }
+            int key = e.getKeyCode();
+
+            if (key == exit) {System.exit(0);}
+
             if (Game.GameState == Game.State.PLAYING) {
                 players.Base ply = Game.player.get(Game.btl.currentplayer);
 
-                if (i == up) {
-                    // ply.selecty--;if (ply.selecty<0) {ply.selecty++;}
-                    Game.obs.getSubject().setSate("up", Game.obs);
-                } else if (i == down) {
-                    Game.obs.getSubject().setSate("down", Game.obs);
-                    // ply.selecty++;if (ply.selecty>=Game.map.height) {ply.selecty--;}
-                } else if (i == left) {
-                    Game.obs.getSubject().setSate("left", Game.obs);
-                    // ply.selectx--;if (ply.selectx<0) {ply.selectx++;}
-                } else if (i == right) {
-                    Game.obs.getSubject().setSate("right", Game.obs);
-                    // ply.selectx++;if (ply.selectx>=Game.map.width) {ply.selectx--;}
-                } else if (i == select) {
-                    Game.obs.getSubject().setSate("select", Game.obs);
-                    // Game.btl.Action();
-                } else if (i == cancel) {
-                    Game.obs.getSubject().setSate("cancel", Game.obs);
-                    // Game.player.get(Game.btl.currentplayer).Cancle();
-                } else if (i == start) {
-                    // Game.obs.getSubject().setSate("start", Game.obs);
+                if (key == up) {
+                    String message = "up";
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                } else if (key == down) {
+                    String message = "down";
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                } else if (key == left) {
+                    String message = "left";
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                } else if (key == right) {
+                    String message = "right";
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                } else if (key == select) {
+                    String message = "select";
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                } else if (key == cancel) {
+                    String message = "cancel";
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                } else if (key == start) {
                     new menus.Pause();
                 }
-
             }
+
             if (Game.GameState == Game.State.EDITOR) {
-                if (i == up) {
-                    Game.obs.getSubject().setSate("up");
-                    // Game.edit.selecty--;if (Game.edit.selecty<0) {Game.edit.selecty++;} Game.edit.moved = true;
-                } else if (i == down) {
-                    Game.obs.getSubject().setSate("down");
-                    // Game.edit.selecty++;if (Game.edit.selecty>=Game.map.height) {Game.edit.selecty--;} Game.edit.moved = true;
-                } else if (i == left) {
-                    Game.obs.getSubject().setSate("left");
-                    // Game.edit.selectx--;if (Game.edit.selectx<0) {Game.edit.selectx++;} Game.edit.moved = true;
-                } else if (i == right) {
-                    Game.obs.getSubject().setSate("right");
-                    // Game.edit.selectx++;if (Game.edit.selectx>=Game.map.width) {Game.edit.selectx--;} Game.edit.moved = true;
-                } else if (i == select) {
-                    Game.obs.getSubject().setSate("select");
-                    // Game.edit.holding = true;
-                } else if (i == cancel) {
-                    Game.obs.getSubject().setSate("cancel");
-                    // Game.edit.ButtButton();
-                } else if (i == start) {
-                    Game.obs.getSubject().setSate("start");
-                    // new menus.EditorMenu();
+                if (key == up) {
+
+                } else if (key == down) {
+
+                } else if (key == left) {
+
+                } else if (key == right) {
+
+                } else if (key == select) {
+
+                } else if (key == cancel) {
+
+                } else if (key == start) {
+                    new menus.EditorMenu();
                 }
             }
 
-            if (i == dev1) {
+            if (key == dev1) {
                 Game.gui.MenuScreen();
-            } else if (i == dev2) {
+            }
+
+            if (key == dev2) {
                 Game.load.LoadTexturePack("Test");
-            } else if (i == dev3) {
+            }
+
+            if (key == dev3) {
                 DevPathing++;
                 switch (DevPathing) {
-                    case 1:
-                        Game.pathing.ShowCost = false;
-                        break;
-                    case 2:
-                        Game.pathing.ShowHits = true;
-                        break;
-                    case 3:
-                        Game.pathing.ShowHits = false;
-                        Game.pathing.ShowCost = true;
-                        DevPathing = 0;
-                        break;
+                case 1:
+                    Game.pathing.ShowCost = false;
+                    break;
+                case 2:
+                    Game.pathing.ShowHits = true;
+                    break;
+                case 3:
+                    Game.pathing.ShowHits = false;
+                    Game.pathing.ShowCost = true;
+                    DevPathing = 0;
+                    break;
                 }
-            } else if (i == dev4) {
-                Game.btl.EndTurn();
-            } else if (i == dev5) {
-                Game.player.get(Game.btl.currentplayer).npc = !Game.player.get(Game.btl.currentplayer).npc;
-                Game.btl.EndTurn();
-            } else if (i == dev6) {
-                new menus.StartMenu();
             }
 
-        } catch (RemoteException e1) {
-            System.out.println(e1.getMessage());
+            if (key == dev4) {
+                Game.btl.EndTurn();
+            }
+
+            if (key == dev5) {
+                Game.player.get(Game.btl.currentplayer).npc = !Game.player.get(Game.btl.currentplayer).npc;
+                Game.btl.EndTurn();
+            }
+
+            if (key == dev6) {
+                new menus.StartMenu();
+            }
+        } catch (Exception e1) {
+            e1.printStackTrace();
         }
     }
+    
+    // private void handleOnlineInput(KeyEvent e) {
+    //     try {
+    //         int i = e.getKeyCode();
+    //         if (i == exit) {
+    //             System.exit(0);
+    //         }
+    //         if (Game.GameState == Game.State.PLAYING) {
+    //             players.Base ply = Game.player.get(Game.btl.currentplayer);
+
+    //             if (i == up) {
+    //                 Game.obs.getSubject().setSate("up", Game.obs);
+    //             } else if (i == down) {
+    //                 Game.obs.getSubject().setSate("down", Game.obs);
+    //             } else if (i == left) {
+    //                 Game.obs.getSubject().setSate("left", Game.obs);
+    //             } else if (i == right) {
+    //                 Game.obs.getSubject().setSate("right", Game.obs);
+    //             } else if (i == select) {
+    //                 Game.obs.getSubject().setSate("select", Game.obs);
+    //             } else if (i == cancel) {
+    //                 Game.obs.getSubject().setSate("cancel", Game.obs);
+    //             } else if (i == start) {
+    //                 new menus.Pause();
+    //             }
+    //         }
+    //         if (Game.GameState == Game.State.EDITOR) {
+    //             if (i == up) {
+    //                 Game.obs.getSubject().setSate("up");
+    //             } else if (i == down) {
+    //                 Game.obs.getSubject().setSate("down");
+    //             } else if (i == left) {
+    //                 Game.obs.getSubject().setSate("left");
+    //             } else if (i == right) {
+    //                 Game.obs.getSubject().setSate("right");
+    //             } else if (i == select) {
+    //                 Game.obs.getSubject().setSate("select");
+    //             } else if (i == cancel) {
+    //                 Game.obs.getSubject().setSate("cancel");
+    //             } else if (i == start) {
+    //                 Game.obs.getSubject().setSate("start");
+    //             }
+    //         }
+
+    //         if (i == dev1) {
+    //             Game.gui.MenuScreen();
+    //         } else if (i == dev2) {
+    //             Game.load.LoadTexturePack("Test");
+    //         } else if (i == dev3) {
+    //             DevPathing++;
+    //             switch (DevPathing) {
+    //                 case 1:
+    //                     Game.pathing.ShowCost = false;
+    //                     break;
+    //                 case 2:
+    //                     Game.pathing.ShowHits = true;
+    //                     break;
+    //                 case 3:
+    //                     Game.pathing.ShowHits = false;
+    //                     Game.pathing.ShowCost = true;
+    //                     DevPathing = 0;
+    //                     break;
+    //             }
+    //         } else if (i == dev4) {
+    //             Game.btl.EndTurn();
+    //         } else if (i == dev5) {
+    //             Game.player.get(Game.btl.currentplayer).npc = !Game.player.get(Game.btl.currentplayer).npc;
+    //             Game.btl.EndTurn();
+    //         } else if (i == dev6) {
+    //             new menus.StartMenu();
+    //         }
+
+    //     } catch (RemoteException e1) {
+    //         System.out.println(e1.getMessage());
+    //     }
+    // }
 
     private void handleOfflineInput(KeyEvent e) {
         int i=e.getKeyCode();
@@ -186,7 +270,7 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
     
 	public void keyPressed(KeyEvent e) {
         if (Game.isOnline) {
-            handleOnlineInput(e);
+            handleOnlineInputRabbit(e);
         }
         else {
             handleOfflineInput(e);

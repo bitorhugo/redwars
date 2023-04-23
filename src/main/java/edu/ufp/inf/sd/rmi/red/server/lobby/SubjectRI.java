@@ -17,7 +17,9 @@ public interface SubjectRI extends Remote {
 
     public void startGame() throws RemoteException;
     
-    public void setSate(String state, ObserverRI obs) throws RemoteException;
-    public void setSate(String state) throws RemoteException;
-    public String getSate() throws RemoteException;
+    // public void setSate(String state, ObserverRI obs) throws RemoteException;
+    // public void setSate(String state) throws RemoteException;
+    // public String getSate() throws RemoteException;
+
+    public String getQeueuName() throws RemoteException;
 }

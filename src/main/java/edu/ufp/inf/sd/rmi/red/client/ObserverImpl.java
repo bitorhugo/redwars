@@ -1,7 +1,9 @@
 package edu.ufp.inf.sd.rmi.red.client;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -14,22 +16,25 @@ import menus.MenuHandler;
 
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
+    private Connection conn; // connection for rabbit
+    private Channel channel; // channel for rabbit work qeueu
+    private String WQ_QUEUE_NAME;
     private String username;
     private int commander;
     private SubjectRI subject;
     private Game game;
     
-    public ObserverImpl(SubjectRI subject) throws RemoteException {
-        super();
-        this.subject = subject;
-    }
-
-    public ObserverImpl(String username, int commander, SubjectRI subject, Game game) throws RemoteException {
+    public ObserverImpl(String username, int commander, Game game) throws RemoteException {
         super();
         this.username = username;
         this.commander = commander;
-        this.subject = subject;
         this.game = game;
+    }
+
+    public ObserverImpl(String username, int commander, SubjectRI subject, Game game) throws RemoteException {
+        this(username, commander, game);
+        this.subject = subject;
+        this.bindQeueu();
     }
 
     @Override
@@ -40,14 +45,36 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     @Override
     public int getCommander() throws RemoteException {
         return this.commander;
-    }    
+    }
+
+    public Channel getChannel() {
+        return this.channel;
+    }
+
+    public String getQeueuName() {
+        return this.WQ_QUEUE_NAME;
+    }
 
     public SubjectRI getSubject() {
         return this.subject;
     }
 
-    public String getLastObserverState() throws RemoteException {
-        return this.subject.getSate();
+    // public String getLastObserverState() throws RemoteException {
+    //     return this.subject.getSate();
+    // }
+
+    private void bindQeueu() {
+        // create a connection and channel to bind to work queue
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        try {
+            this.WQ_QUEUE_NAME = this.subject.getQeueuName();
+            this.conn = factory.newConnection();
+            this.channel = this.conn.createChannel();
+            channel.queueDeclare(WQ_QUEUE_NAME, false, false, false, null);
+        } catch (IOException | TimeoutException e) {
+            e.printStackTrace();
+        }        
     }
 
     @Override
@@ -57,18 +84,15 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
         this.listen(EXCHANGE_NAME); // start listening for incoming queue messages
     }
 
-    @Override
-    public void update() throws RemoteException {
-        String state = this.getLastObserverState();
-        this.handleState(state);
-    }
+    // @Override
+    // public void update() throws RemoteException {
+    //     String state = this.getLastObserverState();
+    //     this.handleState(state);
+    // }
 
     private void listen(String EXCHANGE_NAME) {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
         try {
-            Connection connection = factory.newConnection();
-            Channel channel = connection.createChannel();
+            Channel channel = this.conn.createChannel();
 
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
             String queueName = channel.queueDeclare().getQueue();
