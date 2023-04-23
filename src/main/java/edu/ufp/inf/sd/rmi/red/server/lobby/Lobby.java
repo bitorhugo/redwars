@@ -186,7 +186,13 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
                 if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
                     // send command to all clients
                     this.channelServerClient.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
+
+                    if (msg.compareTo("endturn") == 0) {
+                        this.ring.passToken();
+                    }
                 }
+                
+                
             };
             this.channelClientServer.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
         } catch (IOException e) {

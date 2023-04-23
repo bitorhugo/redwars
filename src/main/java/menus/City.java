@@ -100,8 +100,11 @@ public class City implements ActionListener,ListSelectionListener {
         } else if (s == Buy) {
             if (Game.isOnline) {
                 try {
-                    Game.obs.getSubject().setSate("buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y);
-                } catch (RemoteException e1) {
+                    String message = Game.obs.getId() + ";buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y;
+                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    System.out.println(" [x] Sent '" + message + "'");
+                    // Game.obs.getSubject().setSate("buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y);
+                } catch (Exception e1) {
                     e1.printStackTrace();
                 }
             }
