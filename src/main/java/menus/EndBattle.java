@@ -67,6 +67,7 @@ public class EndBattle implements ActionListener {
 			Game.gui.MenuScreen();
             Game.isOnline = false;
             try {
+                Game.obs.closeConnection();
                 Game.lobby.detach(Game.obs);
                 Game.session.deleteLobby(Game.lobby.getID());
             } catch (RemoteException e1) {

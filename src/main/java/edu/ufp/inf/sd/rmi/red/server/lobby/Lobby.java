@@ -22,31 +22,29 @@ import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     // client -> server channel
-    private Channel channelClientServer;
+    private Connection conn;
+    private Channel consumeChannel;
     private String WQ_QUEUE_NAME;
 
     // server -> client channel
-    private Channel channelServerClient;
+    private Channel publishChannel;
     private String FANOUT_EXCHANGE_NAME;
     private final static String FANOUT_EXCHANGE_TYPE = "fanout";
     
-    
     private UUID id;
     private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
-    private String state;
+    // private String state;
     private String mapname;
     private TokenRing ring;
 
     public Lobby(Connection conn, String mapname, String username) throws RemoteException {
         this(mapname, username);
 
-        // create client -> server channel
+        this.conn = conn;
+        
+        // create consume channel
         this.WQ_QUEUE_NAME = this.id.toString();
-        this.channelClientServer = this.createClientServerChannel(conn).orElseThrow();
-
-        // create server -> client channel
-        this.FANOUT_EXCHANGE_NAME = this.id.toString();
-        this.channelServerClient = this.createRabbitChannel(conn).orElseThrow();
+        this.consumeChannel = this.createConsumeChannel(conn).orElseThrow();
     }
     
     public Lobby(String mapname, String username) throws RemoteException {
@@ -55,8 +53,16 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this.mapname = mapname;
     }
 
-    public Channel getRabbitChannel() {
-        return this.channelServerClient;
+    public Channel getPublishChannel() {
+        return this.publishChannel;
+    }
+
+    public Channel getConsumeChannel() {
+        return this.consumeChannel;
+    }
+
+    public Connection getConnection() {
+        return this.conn;
     }
 
     @Override
@@ -101,7 +107,13 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     public void startGame() throws RemoteNotEnoughPlayersException {
         if (this.check_requirements()) {
             System.out.println("INFO: Starting game");
-            this.ring = new TokenRing(Clock.systemUTC(), this.observers.size()); // initialize token ring
+
+            // initialize token ring
+            this.ring = new TokenRing(Clock.systemUTC(), this.observers.size());
+
+            // create publish channel
+            this.FANOUT_EXCHANGE_NAME = this.id.toString();
+            this.publishChannel = this.createPublishChannel(this.conn).orElseThrow();
             this.notifyStartGame();
         }
     }
@@ -171,7 +183,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     private void listenStateChanges() {
         try {
-            this.channelClientServer.queueDeclare(this.WQ_QUEUE_NAME, false, false, false, null);
+            this.consumeChannel.queueDeclare(this.WQ_QUEUE_NAME, false, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
             
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -185,16 +197,14 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
                 if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
                     // send command to all clients
-                    this.channelServerClient.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
+                    this.publishChannel.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
 
                     if (msg.compareTo("endturn") == 0) {
                         this.ring.passToken();
                     }
                 }
-                
-                
             };
-            this.channelClientServer.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+            this.consumeChannel.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -214,10 +224,11 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
 
-    public Optional<Channel> createClientServerChannel(Connection conn) {
+    public Optional<Channel> createConsumeChannel(Connection conn) {
         Channel chan;
         try {
             chan = conn.createChannel();
+            System.out.println("INFO: Consume Channel created " + chan);
         } catch(IOException e) {
             chan = null;
             System.err.println("Not able to open channel for RabbitMQ");
@@ -225,7 +236,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         return Optional.ofNullable(chan);
     }
 
-    public Optional<Channel> createRabbitChannel(Connection conn) {
+    public Optional<Channel> createPublishChannel(Connection conn) {
         Channel chan;
         try {
             chan = conn.createChannel();
@@ -234,15 +245,24 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
             chan = null;
             System.err.println("Not able to open channel for RabbitMQ");
         }
-        System.out.println("INFO: Channel created " + chan);
+        System.out.println("INFO: Publish Channel created " + chan);
         return Optional.ofNullable(chan);
     }
 
-    public void deleteRabbitChannel(Channel chan) {
+    public void closeChannel(Channel chan) {
         try {
             chan.close();
             System.out.println("INFO: Channel closed " + chan);
         } catch (IOException | TimeoutException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void closeConnection(Connection conn) {
+        try {
+            conn.close();
+            System.out.println("INFO: Connection closed " + conn);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }    

@@ -37,7 +37,7 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     public ObserverImpl(int id, String username, int commander, SubjectRI subject, Game game) throws RemoteException {
         this(id, username, commander, game);
         this.subject = subject;
-        this.bindQeueu();
+        this.bindQueue();
     }
 
     @Override
@@ -71,18 +71,38 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     //     return this.subject.getSate();
     // }
 
-    private void bindQeueu() {
+    private void bindQueue() {
         // create a connection and channel to bind to work queue
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         try {
             this.WQ_QUEUE_NAME = this.subject.getQeueuName();
             this.conn = factory.newConnection();
+            System.out.println("INFO: Connection created " + this.conn);
             this.channel = this.conn.createChannel();
+            System.out.println("INFO: Channel created " + this.channel);
             channel.queueDeclare(WQ_QUEUE_NAME, false, false, false, null);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }        
+    }
+
+    public void closeChannel() {
+        try {
+            this.channel.close();
+            System.out.println("INFO: Channel closed " + this.channel);
+        } catch (IOException | TimeoutException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void closeConnection() {
+        try {
+            this.conn.close();
+            System.out.println("INFO: Connection closed " + this.conn);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

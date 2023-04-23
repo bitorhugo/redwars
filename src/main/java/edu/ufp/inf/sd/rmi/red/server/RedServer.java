@@ -81,6 +81,7 @@ public class RedServer {
         Connection conn;
         try {
             conn = factory.newConnection();
+            System.out.println("INFO: Connection created " + conn);
         } catch (IOException | TimeoutException e) {
             conn = null;
             System.err.println("ERROR: Not able to open connection with RabbitMQ Services");

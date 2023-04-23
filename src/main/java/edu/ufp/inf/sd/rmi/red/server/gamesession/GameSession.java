@@ -49,7 +49,11 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void deleteLobby(UUID id) throws RemoteException {
         this.verifyToken();
         if(this.lobbies.containsKey(id)) {
-            this.lobbies.get(id).deleteRabbitChannel(this.lobbies.get(id).getRabbitChannel());
+            if (this.lobbies.get(id).getPublishChannel() != null) {
+                this.lobbies.get(id).closeChannel(this.lobbies.get(id).getPublishChannel());
+            }
+            this.lobbies.get(id).closeChannel(this.lobbies.get(id).getConsumeChannel());
+            // this.lobbies.get(id).closeConnection(this.lobbies.get(id).getConnection());
             this.lobbies.remove(id);
             System.out.println("INFO: Lobby " + id + " deleted");
         }
