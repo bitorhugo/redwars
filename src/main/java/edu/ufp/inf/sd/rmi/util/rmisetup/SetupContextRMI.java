@@ -2,6 +2,7 @@ package edu.ufp.inf.sd.rmi.util.rmisetup;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.AccessException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;

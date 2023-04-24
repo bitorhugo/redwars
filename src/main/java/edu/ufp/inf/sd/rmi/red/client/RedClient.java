@@ -18,7 +18,6 @@ import java.util.logging.Logger;
  * @author Vitor Santos
  */
 public class RedClient {
-    // RedClient is the base Frame of GUI
 
     private SetupContextRMI contextRMI;
     private GameFactoryRI stub;
@@ -37,8 +36,6 @@ public class RedClient {
             String registryIP = args[0];
             String registryPort = args[1];
             String serviceName = args[2];
-            //Create a context for RMI setup
-            // http:localhost:1099/{ServiceName}
             this.contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
         } catch (Exception e) {
             Logger.getLogger(RedClient.class.getName()).log(Level.SEVERE, null, e);
@@ -51,9 +48,9 @@ public class RedClient {
         if (reg == null) {
             System.out.println("Registry is null");
         }
-        String serviceUrl = contextRMI.getServicesUrl(0);
         try {
-            this.stub = (GameFactoryRI) reg.lookup(serviceUrl);
+            String serviceName = "GameFactory";
+            this.stub = (GameFactoryRI) reg.lookup(serviceName);
         } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
@@ -68,7 +65,6 @@ public class RedClient {
 
     
     public static void main(final String[] args) {
-        System.out.println("CP " + System.getProperty("java.class.path"));
         new RedClient(args);
     }
 }
