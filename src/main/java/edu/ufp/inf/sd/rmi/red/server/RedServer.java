@@ -2,6 +2,8 @@ package edu.ufp.inf.sd.rmi.red.server;
 
 import edu.ufp.inf.sd.rmi.red.model.db.DB;
 import edu.ufp.inf.sd.rmi.red.server.RedServer;
+import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterImpl;
+import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterRI;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
@@ -34,7 +36,7 @@ public class RedServer {
     private Connection conn;
     private SetupContextRMI contextRMI;
     private GameFactoryRI gameFactoryStub;
-
+    private ClusterRI clusterStub;
 
     /**
      * 
@@ -54,12 +56,20 @@ public class RedServer {
         }
     }
 
-    private void lookupCluster() {
+    private void connectToCluster() {
         try {
-            this.contextRMI.getRegistry().lookup("ClusterService");
+            clusterStub.connect(this);
+        } catch (RemoteException e) {
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Could not connect to cluster");
+            e.printStackTrace();
+        }
+    }
+
+    private void lookupCluster(String service) {
+        try {
+            contextRMI.getRegistry().lookup(service);
         } catch (RemoteException | NotBoundException e) {
-            System.out.println("INFO: Cluster Service not Bound");
-            System.out.println("INFO: Creating cluster...");
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Service {0} not bound", service);
             rebindService("Cluster");
         }
     }
@@ -78,9 +88,14 @@ public class RedServer {
     private void rebindService(String serviceNameOnRegistry) {
         try {
             if (this.contextRMI.getRegistry() != null) {
-                this.gameFactoryStub = new GameFactoryImpl(this.conn, new DB("/home/bitor/projects/redwars/main.db"));
-                //============ Rebind servant ============
-                this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.gameFactoryStub);
+                switch(serviceNameOnRegistry) {
+                case "GameFactory":
+                    this.gameFactoryStub = new GameFactoryImpl(this.conn, new DB("/home/bitor/projects/redwars/main.db"));
+                    this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.gameFactoryStub);
+                case "Cluster":
+                    this.clusterStub = new ClusterImpl();
+                    this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.clusterStub);
+                }
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "service {0} bound and running. :)", serviceNameOnRegistry);
             } else {
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "registry not bound (check IPs). :(");
@@ -96,7 +111,8 @@ public class RedServer {
             System.exit(-1);
         }
         RedServer red = new RedServer(args);
-        red.lookupCluster();
+        red.lookupCluster("Cluster");
+        red.connectToCluster();
         red.connectRabbitServices(args[0]);
         red.rebindService("GameFactory");
     }
