@@ -1,6 +1,5 @@
 target/
 .settings
 saves/
-sqlite*
 main
 main.db        
