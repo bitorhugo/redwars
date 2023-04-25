@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import com.rabbitmq.client.Connection;
 
-import edu.ufp.inf.sd.rmi.red.model.db.DB;
+import edu.ufp.inf.sd.rmi.red.model.db.DBI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSession;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.RemoteGameSessionExpiredException;
@@ -21,7 +21,7 @@ import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryRI {
 
-    private DB db;
+    private DBI db;
     private Connection conn;
     private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
 
@@ -30,12 +30,12 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
         super();
     }
 
-    public GameFactoryImpl(DB db) throws RemoteException {
+    public GameFactoryImpl(DBI db) throws RemoteException {
         this();
         this.db = db;
     }
 
-    public GameFactoryImpl(Connection conn, DB db) throws RemoteException {
+    public GameFactoryImpl(DBI db, Connection conn) throws RemoteException {
         this(db);
         this.conn = conn;
     }

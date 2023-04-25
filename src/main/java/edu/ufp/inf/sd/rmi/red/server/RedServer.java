@@ -1,6 +1,7 @@
 package edu.ufp.inf.sd.rmi.red.server;
 
 import edu.ufp.inf.sd.rmi.red.model.db.DB;
+import edu.ufp.inf.sd.rmi.red.model.db.VolatileDB;
 import edu.ufp.inf.sd.rmi.red.server.RedServer;
 import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterImpl;
 import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterRI;
@@ -90,11 +91,13 @@ public class RedServer {
             if (this.contextRMI.getRegistry() != null) {
                 switch(serviceNameOnRegistry) {
                 case "GameFactory":
-                    this.gameFactoryStub = new GameFactoryImpl(this.conn, new DB("/home/bitor/projects/redwars/main.db"));
+                    this.gameFactoryStub = new GameFactoryImpl(new VolatileDB(), this.conn);
                     this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.gameFactoryStub);
+                    break;
                 case "Cluster":
                     this.clusterStub = new ClusterImpl();
                     this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.clusterStub);
+                    break;
                 }
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "service {0} bound and running. :)", serviceNameOnRegistry);
             } else {
@@ -116,5 +119,6 @@ public class RedServer {
         red.connectRabbitServices(args[0]);
         red.rebindService("GameFactory");
     }
+    
 }
 
