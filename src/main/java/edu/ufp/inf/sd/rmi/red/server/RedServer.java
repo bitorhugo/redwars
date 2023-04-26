@@ -146,7 +146,6 @@ public class RedServer implements Serializable {
             System.err.println("usage: java [options] <rmi_registry_ip> <rmi_registry_port> <service_name>");
             System.exit(-1);
         }
-        // TODO: refactor channels
         // TODO: servers attach to work qeueu ad then fanout to clients
         RedServer red = new RedServer(args);
         red.connectRabbitServices(args[0]);
