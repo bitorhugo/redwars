@@ -16,7 +16,6 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
-import edu.ufp.inf.sd.rmi.red.server.tokenring.RemoteNotCurrentTokenHolderException;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {

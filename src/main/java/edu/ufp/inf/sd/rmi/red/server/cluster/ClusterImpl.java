@@ -1,7 +1,6 @@
 package edu.ufp.inf.sd.rmi.red.server.cluster;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -44,13 +43,12 @@ public class ClusterImpl extends UnicastRemoteObject implements ClusterRI {
 
                 TypeReference<HashMap<String, User>> usersTypeRef = new TypeReference<HashMap<String, User>>() {};
                 Map<String, User> clonedUsers = mapper.readValue(mapper.writeValueAsString(this.master.getDB().getUsers()), usersTypeRef);
-                
-                // TypeReference<GameFactoryImpl> lobbiesTypeRef = new TypeReference<GameFactoryImpl>() {};
+
+                var lobbies = this.master.getLobbies();
+                // TypeReference<HashMap<UUID, Lobby>> lobbiesTypeRef = new TypeReference<HashMap<UUID, Lobby>>() {};
                 // Map<UUID, Lobby> clonedLobbies = mapper.readValue(mapper.writeValueAsString(lobbies),
                 //                                                   lobbiesTypeRef);
 
-                var lobbies = this.master.getLobbies();
-                
                 server.getDB().setUsers(clonedUsers);
                 server.setLobbies(lobbies);
                 
