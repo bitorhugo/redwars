@@ -1,5 +1,9 @@
-target/
 .settings
-saves/
+dependencies
+saves
 main
-main.db        
+main.db
+target
+src/main/java/engine/.Game.java.~undo-tree~     
+src/main/java/engine/.InputHandler.java.~undo-tree~
+src/main/java/edu/ufp/inf/sd/rmi/runscripts/timestamp    
