@@ -1,17 +1,22 @@
 package edu.ufp.inf.sd.rmi.red.server;
 
-import edu.ufp.inf.sd.rmi.red.model.db.DB;
 import edu.ufp.inf.sd.rmi.red.model.db.VolatileDB;
 import edu.ufp.inf.sd.rmi.red.server.RedServer;
 import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterImpl;
 import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterRI;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
+import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,12 +37,14 @@ import com.rabbitmq.client.ConnectionFactory;
  * @author Rui S. Moreira
  * @version 3.0
  */
-public class RedServer {
+public class RedServer implements Serializable {
 
-    private Connection conn;
-    private SetupContextRMI contextRMI;
+    private transient Connection conn;
+    private transient SetupContextRMI contextRMI;
     private GameFactoryRI gameFactoryStub;
     private ClusterRI clusterStub;
+    private VolatileDB db = new VolatileDB();
+    private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * 
@@ -57,21 +64,46 @@ public class RedServer {
         }
     }
 
+    public VolatileDB getDB() {
+        return this.db;
+    }
+
+    public Map<UUID, Lobby> getLobbies() {
+        return this.lobbies;
+    }
+
+    public void setLobbies(Map<UUID, Lobby> lobbies) {
+        this.lobbies = lobbies;
+    }
+
+    public GameFactoryImpl getGameFactory() {
+        return (GameFactoryImpl) this.gameFactoryStub;
+    }
+
     private void connectToCluster() {
         try {
-            clusterStub.connect(this);
+            this.clusterStub.connect(this);
         } catch (RemoteException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Could not connect to cluster");
             e.printStackTrace();
         }
     }
-
-    private void lookupCluster(String service) {
+    
+    // if cluster is unavailable it means that you're the first server spawned
+    // if it is available, the service is already online and you'll be joining the cluster as an aditional server
+    private void lookupService(String service) {
         try {
-            contextRMI.getRegistry().lookup(service);
+            switch (service) {
+            case "GameFactory":
+                this.gameFactoryStub = (GameFactoryRI) contextRMI.getRegistry().lookup(service);
+                break;
+            case "Cluster":
+                this.clusterStub = (ClusterRI) contextRMI.getRegistry().lookup(service);
+                break; 
+            }
         } catch (RemoteException | NotBoundException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Service {0} not bound", service);
-            rebindService("Cluster");
+            rebindService(service);
         }
     }
 
@@ -83,6 +115,7 @@ public class RedServer {
             System.out.println("INFO: Connection created " + conn);
         } catch (IOException | TimeoutException e) {
             System.err.println("ERROR: Not able to open connection with RabbitMQ Services");
+            System.exit(-1);
         }
     }
 
@@ -91,7 +124,7 @@ public class RedServer {
             if (this.contextRMI.getRegistry() != null) {
                 switch(serviceNameOnRegistry) {
                 case "GameFactory":
-                    this.gameFactoryStub = new GameFactoryImpl(new VolatileDB(), this.conn);
+                    this.gameFactoryStub = new GameFactoryImpl(this.db, this.lobbies, this.conn);
                     this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.gameFactoryStub);
                     break;
                 case "Cluster":
@@ -113,11 +146,14 @@ public class RedServer {
             System.err.println("usage: java [options] <rmi_registry_ip> <rmi_registry_port> <service_name>");
             System.exit(-1);
         }
+        
         RedServer red = new RedServer(args);
-        red.lookupCluster("Cluster");
-        red.connectToCluster();
         red.connectRabbitServices(args[0]);
-        red.rebindService("GameFactory");
+        red.lookupService("GameFactory");
+        red.lookupService("Cluster");
+        System.out.println("Cluster: " + red.clusterStub);
+        System.out.println("Factory: " + red.gameFactoryStub);
+        red.connectToCluster();
     }
     
 }

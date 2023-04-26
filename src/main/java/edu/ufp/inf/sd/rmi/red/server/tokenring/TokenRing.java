@@ -1,5 +1,6 @@
 package edu.ufp.inf.sd.rmi.red.server.tokenring;
 
+import java.io.Serializable;
 import java.time.Clock;
 import java.time.Instant;
 

@@ -23,7 +23,7 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
 
     private DBI db;
     private Connection conn;
-    private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
+    private Map<UUID, Lobby> lobbies;
 
 
     public GameFactoryImpl() throws RemoteException {
@@ -38,6 +38,19 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
     public GameFactoryImpl(DBI db, Connection conn) throws RemoteException {
         this(db);
         this.conn = conn;
+    }
+
+    public GameFactoryImpl(DBI db, Map<UUID, Lobby> lobbies, Connection conn) throws RemoteException {
+        this(db, conn);
+        this.lobbies = lobbies;
+    }
+
+    public Map<UUID, Lobby> getLobbies() {
+        return this.lobbies;
+    }
+
+    public void setLobbies(Map<UUID, Lobby> lobbies) {
+        this.lobbies = lobbies;
     }
 
     @Override

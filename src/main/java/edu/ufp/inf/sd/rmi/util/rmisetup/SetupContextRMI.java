@@ -1,5 +1,6 @@
 package edu.ufp.inf.sd.rmi.util.rmisetup;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.AccessException;
@@ -15,7 +16,6 @@ import java.util.logging.Logger;
  * @author rui
  */
 public class SetupContextRMI {
-
     private Registry registry;
     private InetAddress localHostInetAddress;
     private String localHostName;
