@@ -20,6 +20,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     private User owner;
     private Map<UUID, Lobby> lobbies;
 
+    
     public GameSession(Connection conn, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
         owner.verifyToken();

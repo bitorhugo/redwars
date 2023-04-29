@@ -3,11 +3,15 @@ package menus;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 
+import com.rabbitmq.client.DeliverCallback;
+
+import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
 import engine.Game;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -86,29 +90,33 @@ public class Login implements ActionListener, KeyListener {
         Object src = e.getSource();
 
         if (src == Login) {
+            String action = "login";
             String u = username.getText();
             String s = secret.getText();
-            try {
-                Game.session = Game.remoteService.login(u, s);
-                Game.u = u;
-                new StartMenu();
-            } catch (RemoteException e1) {
-                String error = e1.getCause().toString();
-                Game.error.ShowError(error);
-            }
+            this.handleMessages(action, u, s);
+            // try {
+            //     Game.session = Game.remoteService.login(u, s);
+            //     Game.u = u;
+            //     new StartMenu();
+            // } catch (RemoteException e1) {
+            //     String error = e1.getCause().toString();
+            //     Game.error.ShowError(error);
+            // }
         }
 
         if (src == Register) {
+            String action = "register";
             String u = username.getText();
             String s = secret.getText();
-            try {
-                Game.session = Game.remoteService.register(u, s);
-                Game.u = u;
-                new StartMenu();
-            } catch (RemoteException e1) {
-                String error = e1.getCause().toString();
-                Game.error.ShowError(error);
-            }            
+            this.handleMessages(action, u, s);
+            // try {
+            //     Game.session = Game.remoteService.register(u, s);
+            //     Game.u = u;
+            //     new StartMenu();
+            // } catch (RemoteException e1) {
+            //     String error = e1.getCause().toString();
+            //     Game.error.ShowError(error);
+            // }            
         }
 
         if (src == Exit) {System.exit(0);}
@@ -120,14 +128,16 @@ public class Login implements ActionListener, KeyListener {
         if (c == '\n' || c == '\r') {
             String u = username.getText();
             String s = secret.getText();
-            try {
-                Game.session = Game.remoteService.login(u, s);
-                Game.u = u;
-                new StartMenu();
-            } catch (RemoteException e1) {
-                String error = e1.getCause().toString();
-                Game.error.ShowError(error);
-            }
+            String action = "login";
+            this.handleMessages(action, u, s);
+            // try {
+            //     Game.session = Game.remoteService.login(u, s);
+            //     Game.u = u;
+            //     new StartMenu();
+            // } catch (RemoteException e1) {
+            //     String error = e1.getCause().toString();
+            //     Game.error.ShowError(error);
+            // }
         }
     }
  
@@ -136,5 +146,37 @@ public class Login implements ActionListener, KeyListener {
 
     @Override
     public void keyTyped(KeyEvent arg0) {}
-    
+
+    private void handleMessages(String action, String username, String secret) {
+        String message = action + ";" + username + ";" + secret;
+        try {
+            Game.chan.queueDeclare(username, false, false, false, null);
+            System.out.println(" [*] Waiting for messages.");
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String msg = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + msg + "'");
+                switch (msg) {
+                case "ok":
+                        new StartMenu();
+                        break;
+                default:
+                    switch (action) {
+                    case "login":
+                        Game.error.ShowError("ERROR: User not found!");
+                        break;
+                    case "register":
+                        Game.error.ShowError("ERROR: User already registered!");
+                        break;
+                    }
+                }
+            };
+            Game.chan.basicConsume(username, true, deliverCallback, consumerTag -> { });
+                
+            Game.chan.basicPublish(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "", null, message.getBytes("UTF-8"));
+            System.out.println("INFO: Success! Message " + message + " sent to Exchange auth.");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }        
+    }
 }

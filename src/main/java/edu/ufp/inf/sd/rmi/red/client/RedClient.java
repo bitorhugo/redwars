@@ -1,16 +1,20 @@
 package edu.ufp.inf.sd.rmi.red.client;
 
-
-import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
-import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 import engine.Game;
 
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.swing.LookAndFeel;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.AMQP.Exchange;
+
+import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
 
 
 
@@ -19,48 +23,47 @@ import java.util.logging.Logger;
  */
 public class RedClient {
 
-    private SetupContextRMI contextRMI;
-    private GameFactoryRI stub;
+    private transient Connection conn;
+    private transient Channel chan;
 
+    
     public RedClient (String args[]) {
-        this.initContext(args);
-        this.lookup();
+        this.connectToBroker(args[0]);
+        this.setupRabbitContext();
         this.startGame();
     }
 
 
-    private void initContext(String args[]) {
+
+    private void connectToBroker (String host) {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(host);
         try {
-            //List ans set args
-            SetupContextRMI.printArgs(this.getClass().getName(), args);
-            String registryIP = args[0];
-            String registryPort = args[1];
-            String serviceName = args[2];
-            this.contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
-        } catch (Exception e) {
-            Logger.getLogger(RedClient.class.getName()).log(Level.SEVERE, null, e);
+            this.conn = factory.newConnection();
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Connection {0} created.", this.conn);
+            this.chan = this.conn.createChannel();
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Channel {0} created.", this.chan);
+        } catch (IOException | TimeoutException e) {
+            System.err.println("ERROR: Not able to open connection with RabbitMQ Services");
+            System.exit(-1);
         }
     }
 
-
-    private void lookup() {
-        Registry reg = this.contextRMI.getRegistry();
-        if (reg == null) {
-            System.out.println("Registry is null");
-        }
+    private void setupRabbitContext() {
         try {
-            String serviceName = "GameFactory";
-            this.stub = (GameFactoryRI) reg.lookup(serviceName);
-        } catch (RemoteException | NotBoundException e) {
+            this.chan.exchangeDeclare(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "fanout");
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Exchange {0} declared.",
+                                                            ExchangeEnum.AUTHEXCHANGENAME.getValue());
+            this.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Exchange {0} declared.",
+                                                            ExchangeEnum.LOBBIESEXCHANGENAME.getValue());
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Starts new Game 
-     */
     private void startGame() {
-        new Game(this.stub);
+        new Game();
     }
 
     

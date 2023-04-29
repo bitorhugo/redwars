@@ -25,7 +25,6 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
     private Connection conn;
     private Map<UUID, Lobby> lobbies;
 
-
     public GameFactoryImpl() throws RemoteException {
         super();
     }

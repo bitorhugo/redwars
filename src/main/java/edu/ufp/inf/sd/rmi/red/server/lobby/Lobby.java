@@ -64,6 +64,10 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         return this.conn;
     }
 
+    public TokenRing getRing() {
+        return this.ring;
+    }
+
     @Override
     public String getQeueuName() throws RemoteException {
         return this.WQ_QUEUE_NAME;

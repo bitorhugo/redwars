@@ -38,5 +38,5 @@ java -cp ${CLASSPATH}":"${sqlite}":"${jacka}":"${jackc}":"${jackd}":"${jwt}":"${
      -Djava.security.policy=${SERVER_SECURITY_POLICY} \
      ${JAVAPACKAGEROLE}.${SERVER_CLASS_PREFIX}${SERVER_CLASS_POSTFIX} ${REGISTRY_HOST} ${REGISTRY_PORT} ${SERVICE_NAME_ON_REGISTRY}
 
-cd ${ABSPATH2SRC}/${JAVASCRIPTSPATH}
+# cd ${ABSPATH2SRC}/${JAVASCRIPTSPATH}
 #pwd

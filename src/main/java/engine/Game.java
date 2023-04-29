@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
 
+import com.rabbitmq.client.Channel;
+
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
@@ -73,8 +75,10 @@ public class Game extends JFrame {
     public static boolean isOnline = false;
     public static String u; // username
     public static int cmd; // commander selected by client
+
+    public static Channel chan;
     
-	public Game(GameFactoryRI stub) {
+	public Game(Channel channel) {
         super (name);
         //Default Settings of the JFrame
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -85,7 +89,7 @@ public class Game extends JFrame {
 	    setLocationRelativeTo(null);
 
         // save stub for future reference
-        remoteService = stub;
+        chan = channel;
         // save this game instance
         g = this;
 

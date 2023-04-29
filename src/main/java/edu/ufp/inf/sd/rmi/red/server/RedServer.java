@@ -1,18 +1,11 @@
 package edu.ufp.inf.sd.rmi.red.server;
 
 import edu.ufp.inf.sd.rmi.red.model.db.VolatileDB;
-import edu.ufp.inf.sd.rmi.red.server.RedServer;
-import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterImpl;
-import edu.ufp.inf.sd.rmi.red.server.cluster.ClusterRI;
-import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryImpl;
-import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
+import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserAlreadyRegisteredException;
+import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
-import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
-
 import java.io.IOException;
 import java.io.Serializable;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +14,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
 
 /**
  * <p>
@@ -39,29 +34,27 @@ import com.rabbitmq.client.ConnectionFactory;
  */
 public class RedServer implements Serializable {
 
+    // TODO: Refactor server using only rabbtmq
+    // Server will consume Auth_Queue and Lobbies_Queue
+
     private transient Connection conn;
-    private transient SetupContextRMI contextRMI;
-    private GameFactoryRI gameFactoryStub;
-    private ClusterRI clusterStub;
+    private transient Channel chan;
+    private static final String AUTHEXCHANGENAME = "auth";
+    private static final String LOBBIESEXCHANGENAME = "lobbies";
+    
     private VolatileDB db = new VolatileDB();
     private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
 
     /**
-     * 
      * @param args 
      */
     public RedServer (String args[]) {
-        try {
-            //============ List and Set args ============
-            SetupContextRMI.printArgs(this.getClass().getName(), args);
-            String registryIP = args[0];
-            String registryPort = args[1];
-            String serviceName = args[2];
-            //============ Create a context for RMI setup ============
-            this.contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
-        } catch (RemoteException e) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, e);
-        }
+        // First create a rabbit connection
+        this.connectToBroker(args[0]);
+        // listen for Auth_Queue
+        this.listenAuth();
+        // listen for Lobbies_Queue
+        this.listenLobbies();
     }
 
     public VolatileDB getDB() {
@@ -76,82 +69,97 @@ public class RedServer implements Serializable {
         this.lobbies = lobbies;
     }
 
-    public GameFactoryImpl getGameFactory() {
-        return (GameFactoryImpl) this.gameFactoryStub;
-    }
-
-    private void connectToCluster() {
-        try {
-            this.clusterStub.connect(this);
-        } catch (RemoteException e) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Could not connect to cluster");
-            e.printStackTrace();
-        }
-    }
-    
-    // if cluster is unavailable it means that you're the first server spawned
-    // if it is available, the service is already online and you'll be joining the cluster as an aditional server
-    private void lookupService(String service) {
-        try {
-            switch (service) {
-            case "GameFactory":
-                this.gameFactoryStub = (GameFactoryRI) contextRMI.getRegistry().lookup(service);
-                break;
-            case "Cluster":
-                this.clusterStub = (ClusterRI) contextRMI.getRegistry().lookup(service);
-                break; 
-            }
-        } catch (RemoteException | NotBoundException e) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Service {0} not bound", service);
-            rebindService(service);
-        }
-    }
-
-    private void connectRabbitServices (String host) {
+    private void connectToBroker (String host) {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);
         try {
             this.conn = factory.newConnection();
-            System.out.println("INFO: Connection created " + conn);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Connection {0} created.", this.conn);
+            this.chan = this.conn.createChannel();
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Channel {0} created.", this.chan);
         } catch (IOException | TimeoutException e) {
             System.err.println("ERROR: Not able to open connection with RabbitMQ Services");
             System.exit(-1);
         }
     }
 
-    private void rebindService(String serviceNameOnRegistry) {
+    private void listenAuth() {
         try {
-            if (this.contextRMI.getRegistry() != null) {
-                switch(serviceNameOnRegistry) {
-                case "GameFactory":
-                    this.gameFactoryStub = new GameFactoryImpl(this.db, this.lobbies, this.conn);
-                    this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.gameFactoryStub);
-                    break;
-                case "Cluster":
-                    this.clusterStub = new ClusterImpl();
-                    this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.clusterStub);
-                    break;
+            this.chan.exchangeDeclare(AUTHEXCHANGENAME, "fanout");
+            String queueName = this.chan.queueDeclare().getQueue();
+            this.chan.queueBind(queueName, AUTHEXCHANGENAME, "");
+
+            System.out.println(" [*] Waiting for AUTH messages. To exit press CTRL+C");
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
+                for (var m : message) {
+                System.out.println(m);}
+                try {
+                    this.handleAuth(message[0], message[1], message[2]);
+                } catch (RemoteUserNotFoundException | RemoteUserAlreadyRegisteredException e) {
+                    e.printStackTrace();
                 }
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "service {0} bound and running. :)", serviceNameOnRegistry);
-            } else {
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "registry not bound (check IPs). :(");
+            };
+            
+            this.chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+            
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+    
+    private void listenLobbies() {
+        try {
+            this.chan.exchangeDeclare(LOBBIESEXCHANGENAME, "fanout");
+            String queueName = this.chan.queueDeclare().getQueue();
+            this.chan.queueBind(queueName, LOBBIESEXCHANGENAME, "");
+
+            System.out.println(" [*] Waiting for LOBBIES messages. To exit press CTRL+C");
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+            };
+            
+            this.chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+            
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleAuth(String action, String username, String secret) throws RemoteUserNotFoundException, RemoteUserAlreadyRegisteredException {
+        try {
+            String message;
+            switch (action) {
+            case "login":
+                this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
+                this.chan.queueDeclare(username, false, false, false, null);
+                message = "ok";
+                this.chan.basicPublish("", username, null, message.getBytes());
+                System.out.println(" [x] Sent '" + message + "'");
+                break;
+            case "register":
+                this.db.insert(username, secret).orElseThrow(RemoteUserAlreadyRegisteredException::new);
+                this.chan.queueDeclare(username, false, false, false, null);
+                message = "ok";
+                this.chan.basicPublish("", username, null, message.getBytes());
+                System.out.println(" [x] Sent '" + message + "'");
+                break;
             }
-        } catch (RemoteException ex) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
+        System.out.println("Hello");
         if (args != null && args.length < 3) {
             System.err.println("usage: java [options] <rmi_registry_ip> <rmi_registry_port> <service_name>");
             System.exit(-1);
         }
-        // TODO: servers attach to work qeueu ad then fanout to clients
         RedServer red = new RedServer(args);
-        red.connectRabbitServices(args[0]);
-        System.out.println("Cluster: " + red.clusterStub);
-        System.out.println("Factory: " + red.gameFactoryStub);
-        red.connectToCluster();
     }
     
 }
