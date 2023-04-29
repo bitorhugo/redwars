@@ -2,12 +2,14 @@ package menus.online;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.awt.Point;
 
 import javax.swing.JButton;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
+import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -52,13 +54,22 @@ public class OnlineMenu implements ActionListener {
 
         if (s == New) {
             try {
-                Game.lobby = Game.session.createLobby(mapname);
-                System.out.println("INFO: New lobby created: " + Game.lobby);
-                int id = Game.lobby.players().size();
-                Game.obs = new ObserverImpl(id, Game.u, Game.cmd, Game.lobby, Game.g);
-                Game.lobby.attach(Game.obs);                // attach observer to lobby
-                new WaitQueueMenu();
-            } catch (RemoteException e1) {
+                String msg = this.mapname + ";" + "new";
+
+                // fanout message of new looby
+                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), mapname, null, msg.getBytes("UTF-8"));
+                System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+                
+                //     Game.lobby = Game.session.createLobby(mapname);
+                //     System.out.println("INFO: New lobby created: " + Game.lobby);
+                //     int id = Game.lobby.players().size();
+                //     Game.obs = new ObserverImpl(id, Game.u, Game.cmd, Game.lobby, Game.g);
+                //     Game.lobby.attach(Game.obs);                // attach observer to lobby
+                //     new WaitQueueMenu();
+                // } catch (RemoteException e1) {
+                //     e1.printStackTrace();
+                // }
+            } catch (IOException e1) {
                 e1.printStackTrace();
             }
         }

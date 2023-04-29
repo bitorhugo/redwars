@@ -8,7 +8,7 @@ import java.util.UUID;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 
-public interface SubjectRI extends Remote, Serializable {
+public interface SubjectRI extends Serializable {
     public List<ObserverRI> players() throws RemoteException;
     public UUID getID() throws RemoteException;
     public String getMapname() throws RemoteException;

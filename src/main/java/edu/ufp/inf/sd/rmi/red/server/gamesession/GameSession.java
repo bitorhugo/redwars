@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
@@ -17,9 +18,17 @@ import edu.ufp.inf.sd.rmi.red.model.user.User;
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
     private Connection conn;
+    private Channel chan;
     private User owner;
     private Map<UUID, Lobby> lobbies;
 
+    public GameSession(Channel chan, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
+        super();
+        owner.verifyToken();
+        this.chan = chan;
+        this.owner = owner;
+        this.lobbies = lobbies;
+    }
     
     public GameSession(Connection conn, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
@@ -39,8 +48,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public SubjectRI createLobby(String mapname) throws RemoteException {
         this.verifyToken();
-        Lobby l = new Lobby(this.conn, mapname,
-                            this.owner.getUsername());
+        Lobby l = new Lobby(this.chan, mapname);
         System.out.println(this.owner.getUsername() + " created lobby:" + l);
         this.lobbies.put(l.getID(), l);
         return l;
@@ -50,11 +58,6 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void deleteLobby(UUID id) throws RemoteException {
         this.verifyToken();
         if(this.lobbies.containsKey(id)) {
-            if (this.lobbies.get(id).getPublishChannel() != null) {
-                this.lobbies.get(id).closeChannel(this.lobbies.get(id).getPublishChannel());
-            }
-            this.lobbies.get(id).closeChannel(this.lobbies.get(id).getConsumeChannel());
-            // this.lobbies.get(id).closeConnection(this.lobbies.get(id).getConnection());
             this.lobbies.remove(id);
             System.out.println("INFO: Lobby " + id + " deleted");
         }

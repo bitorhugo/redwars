@@ -6,6 +6,7 @@ import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,13 +35,14 @@ import com.rabbitmq.client.DeliverCallback;
  */
 public class RedServer implements Serializable {
 
-    // TODO: Refactor server using only rabbtmq
-    // Server will consume Auth_Queue and Lobbies_Queue
-
     private transient Connection conn;
     private transient Channel chan;
+    
     private static final String AUTHEXCHANGENAME = "auth";
     private static final String LOBBIESEXCHANGENAME = "lobbies";
+
+    private static final String LOGINQUEUENAME = "login";
+    private static final String SEARCHLOBBYNAME = "search_lobby";
     
     private VolatileDB db = new VolatileDB();
     private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
@@ -88,22 +90,38 @@ public class RedServer implements Serializable {
             this.chan.exchangeDeclare(AUTHEXCHANGENAME, "fanout");
             String queueName = this.chan.queueDeclare().getQueue();
             this.chan.queueBind(queueName, AUTHEXCHANGENAME, "");
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Exchange {0} created", AUTHEXCHANGENAME);
 
-            System.out.println(" [*] Waiting for AUTH messages. To exit press CTRL+C");
+            this.chan.queueDeclare(LOGINQUEUENAME, false, false, false, null);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Work-Queue {0} created", LOGINQUEUENAME);
 
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            DeliverCallback deliverCallbackFanout = (consumerTag, delivery) -> {
                 String[] message = new String(delivery.getBody(), "UTF-8").split(";");
-                for (var m : message) {
-                    System.out.println(m);
-                }
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE AUTH: Received {0}", Arrays.asList(message));
+
                 try {
-                    this.handleAuth(message[0], message[1], message[2]);
+                    this.handleAuth("register", message[0], message[1]);
                 } catch (RemoteUserNotFoundException | RemoteUserAlreadyRegisteredException e) {
                     e.printStackTrace();
                 }
             };
-            
-            this.chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+
+            DeliverCallback deliverCallbackWorkQueue = (consumerTag, delivery) -> {
+                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "WORK-QUEUE Login: Received {0}", Arrays.asList(message));
+                try {
+                    this.handleAuth("login", message[0], message[1]);
+                } catch (RemoteUserNotFoundException | RemoteUserAlreadyRegisteredException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            // Consume from fanout exchange
+            this.chan.basicConsume(queueName, true, deliverCallbackFanout, consumerTag -> { });
+
+            // Consume from Work-Queue
+            boolean autoAck = true;
+            this.chan.basicConsume(LOGINQUEUENAME, autoAck, deliverCallbackWorkQueue, consumerTag -> {});
             
         } catch (IOException e){
             e.printStackTrace();
@@ -116,11 +134,10 @@ public class RedServer implements Serializable {
             String queueName = this.chan.queueDeclare().getQueue();
             this.chan.queueBind(queueName, LOBBIESEXCHANGENAME, "");
 
-            System.out.println(" [*] Waiting for LOBBIES messages. To exit press CTRL+C");
-
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println(" [x] Received '" + message + "'");
+                String []message = new String(delivery.getBody(), "UTF-8").split(";");
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE LOBBIES: Received {0}", message);
+                this.handleLobbies(message[1], message[0]);
             };
             
             this.chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
@@ -157,13 +174,26 @@ public class RedServer implements Serializable {
         }
     }
 
+    private void handleLobbies(String action, String mapname) {
+        switch (action) {
+        case "new":
+            Lobby l = new Lobby(this.chan, mapname);
+            this.lobbies.put(l.getID(), l);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
+            break;
+        case "join":
+            break;
+        case "search":
+            break;
+        }
+    }
+
     public static void main(String[] args) {
-        System.out.println("Hello");
         if (args != null && args.length < 3) {
             System.err.println("usage: java [options] <rmi_registry_ip> <rmi_registry_port> <service_name>");
             System.exit(-1);
         }
-        RedServer red = new RedServer(args);
+        new RedServer(args);
     }
     
 }

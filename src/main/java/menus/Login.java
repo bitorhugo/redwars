@@ -10,12 +10,7 @@ import engine.Game;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 import java.awt.Point;
@@ -150,19 +145,21 @@ public class Login implements ActionListener{
     // public void keyTyped(KeyEvent arg0) {}
 
     private void handleMessages(String action, String username, String secret) {
-        String message = action + ";" + username + ";" + secret;
         try {
+            // open queue for receiving response from server
             Map<String, Object> args = new HashMap<>();
-            args.put("x-expires", 60000); // queue time-to-live = 60s 
+            args.put("x-expires", 60000); // queue time-to-live = 60s
             Game.chan.queueDeclare(username, false, false, false, args);
-            System.out.println(" [*] Waiting for messages.");
+            System.out.println(" [*] Waiting for response from server.");
+            
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String msg = new String(delivery.getBody(), "UTF-8");
-                System.out.println(" [x] Received '" + msg + "'");
-                switch (msg) {
+                String response = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + response + "'");
+                switch (response) {
                 case "ok":
-                        new StartMenu();
-                        break;
+                    Game.u = username;
+                    new StartMenu();
+                    break;
                 default:
                     switch (action) {
                     case "login":
@@ -175,12 +172,22 @@ public class Login implements ActionListener{
                 }
             };
             Game.chan.basicConsume(username, true, deliverCallback, consumerTag -> { });
-                
-            Game.chan.basicPublish(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "", null, message.getBytes("UTF-8"));
-            System.out.println("INFO: Success! Message " + message + " sent to Exchange auth.");
 
+            String credentials = username + ";" + secret;
+            switch (action) {
+            case "login":
+                Game.chan.queueDeclare("login", false, false, false, null);
+                Game.chan.basicPublish("", "login", null, credentials.getBytes("UTF-8"));
+                System.out.println("INFO: Success! Message " + credentials + " sent to Login Queue.");
+                break;
+            case "register":
+                Game.chan.basicPublish(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "", null, credentials.getBytes("UTF-8"));
+                System.out.println("INFO: Success! Message " + credentials + " sent to Exchange AUTH.");
+                break;
+            }
+            
         } catch (IOException e) {
             e.printStackTrace();
-        }        
+        }
     }
 }
