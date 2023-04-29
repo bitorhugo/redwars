@@ -16,9 +16,11 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map;
 import java.awt.Point;
 
-public class Login implements ActionListener, KeyListener {
+public class Login implements ActionListener{
     public JTextField username = new JTextField("Username");
     public JTextField secret = new JTextField("Secret");
     public JButton Login = new JButton("Login");
@@ -50,36 +52,36 @@ public class Login implements ActionListener, KeyListener {
 	}
 
 	private void AddListeners() {
-        username.addKeyListener(this);
-        username.addFocusListener(new FocusListener(){
-                @Override
-                public void focusGained(FocusEvent arg0) {
-                    if (username.getText().equals("Username")) {
-                        username.setText("");
-                    }
-                }
-                @Override
-                public void focusLost(FocusEvent arg0) {
-                    if (username.getText().equals("")) {
-                        username.setText("Username");
-                    }
-                }
-            });
-        secret.addKeyListener(this);
-        secret.addFocusListener(new FocusListener(){
-                @Override
-                public void focusGained(FocusEvent arg0) {
-                    if (secret.getText().equals("Secret")) {
-                        secret.setText("");
-                    }
-                }
-                @Override
-                public void focusLost(FocusEvent arg0) {
-                    if (secret.getText().equals("")) {
-                        secret.setText("Secret");
-                    }
-                }
-            });
+        // username.addKeyListener(this);
+        // username.addFocusListener(new FocusListener(){
+        //         @Override
+        //         public void focusGained(FocusEvent arg0) {
+        //             if (username.getText().equals("Username")) {
+        //                 username.setText("");
+        //             }
+        //         }
+        //         @Override
+        //         public void focusLost(FocusEvent arg0) {
+        //             if (username.getText().equals("")) {
+        //                 username.setText("Username");
+        //             }
+        //         }
+        //     });
+        // secret.addKeyListener(this);
+        // secret.addFocusListener(new FocusListener(){
+        //         @Override
+        //         public void focusGained(FocusEvent arg0) {
+        //             if (secret.getText().equals("Secret")) {
+        //                 secret.setText("");
+        //             }
+        //         }
+        //         @Override
+        //         public void focusLost(FocusEvent arg0) {
+        //             if (secret.getText().equals("")) {
+        //                 secret.setText("Secret");
+        //             }
+        //         }
+        //     });
 		Login.addActionListener(this);
 		Register.addActionListener(this);
 		Exit.addActionListener(this);
@@ -122,35 +124,37 @@ public class Login implements ActionListener, KeyListener {
         if (src == Exit) {System.exit(0);}
     }
 
-    @Override
-    public void keyPressed(KeyEvent arg0) {
-        char c = arg0.getKeyChar(); // retrieve keyboard input from user
-        if (c == '\n' || c == '\r') {
-            String u = username.getText();
-            String s = secret.getText();
-            String action = "login";
-            this.handleMessages(action, u, s);
-            // try {
-            //     Game.session = Game.remoteService.login(u, s);
-            //     Game.u = u;
-            //     new StartMenu();
-            // } catch (RemoteException e1) {
-            //     String error = e1.getCause().toString();
-            //     Game.error.ShowError(error);
-            // }
-        }
-    }
+    // @Override
+    // public void keyPressed(KeyEvent arg0) {
+    //     char c = arg0.getKeyChar(); // retrieve keyboard input from user
+    //     if (c == '\n' || c == '\r') {
+    //         String u = username.getText();
+    //         String s = secret.getText();
+    //         String action = "login";
+    //         this.handleMessages(action, u, s);
+    //         // try {
+    //         //     Game.session = Game.remoteService.login(u, s);
+    //         //     Game.u = u;
+    //         //     new StartMenu();
+    //         // } catch (RemoteException e1) {
+    //         //     String error = e1.getCause().toString();
+    //         //     Game.error.ShowError(error);
+    //         // }
+    //     }
+    // }
  
-    @Override
-    public void keyReleased(KeyEvent arg0) {}
+    // @Override
+    // public void keyReleased(KeyEvent arg0) {}
 
-    @Override
-    public void keyTyped(KeyEvent arg0) {}
+    // @Override
+    // public void keyTyped(KeyEvent arg0) {}
 
     private void handleMessages(String action, String username, String secret) {
         String message = action + ";" + username + ";" + secret;
         try {
-            Game.chan.queueDeclare(username, false, false, false, null);
+            Map<String, Object> args = new HashMap<>();
+            args.put("x-expires", 60000); // queue time-to-live = 60s 
+            Game.chan.queueDeclare(username, false, false, false, args);
             System.out.println(" [*] Waiting for messages.");
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String msg = new String(delivery.getBody(), "UTF-8");

@@ -94,7 +94,8 @@ public class RedServer implements Serializable {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String[] message = new String(delivery.getBody(), "UTF-8").split(";");
                 for (var m : message) {
-                System.out.println(m);}
+                    System.out.println(m);
+                }
                 try {
                     this.handleAuth(message[0], message[1], message[2]);
                 } catch (RemoteUserNotFoundException | RemoteUserAlreadyRegisteredException e) {
@@ -131,18 +132,21 @@ public class RedServer implements Serializable {
 
     private void handleAuth(String action, String username, String secret) throws RemoteUserNotFoundException, RemoteUserAlreadyRegisteredException {
         try {
+            Map<String, Object> args = new HashMap<>();
+            args.put("x-expires", 60000); // queue time-to-live = 60s 
+
             String message;
             switch (action) {
             case "login":
                 this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
-                this.chan.queueDeclare(username, false, false, false, null);
+                this.chan.queueDeclare(username, false, false, false, args);
                 message = "ok";
                 this.chan.basicPublish("", username, null, message.getBytes());
                 System.out.println(" [x] Sent '" + message + "'");
                 break;
             case "register":
                 this.db.insert(username, secret).orElseThrow(RemoteUserAlreadyRegisteredException::new);
-                this.chan.queueDeclare(username, false, false, false, null);
+                this.chan.queueDeclare(username, false, false, false, args);
                 message = "ok";
                 this.chan.basicPublish("", username, null, message.getBytes());
                 System.out.println(" [x] Sent '" + message + "'");

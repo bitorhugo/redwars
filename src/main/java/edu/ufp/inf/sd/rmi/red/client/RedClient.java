@@ -63,7 +63,7 @@ public class RedClient {
     }
 
     private void startGame() {
-        new Game();
+        new Game(this.chan);
     }
 
     
