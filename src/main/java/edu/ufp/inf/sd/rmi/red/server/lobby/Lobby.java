@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 
@@ -19,14 +20,22 @@ public class Lobby implements SubjectRI {
     
     private UUID id;
     private String mapname;
+    
+    @JsonIgnore
     private transient TokenRing ring;
     
+    @JsonIgnore
     private transient Channel chan;
+    
     // client -> server
+    @JsonIgnore
     private transient String WQ_QUEUE_NAME;
+    
     // server -> client channel
+    @JsonIgnore
     private transient String FANOUT_EXCHANGE_NAME;
 
+    @JsonIgnore
     private transient List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
 
 
@@ -166,6 +175,11 @@ public class Lobby implements SubjectRI {
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "{" + this.id + "," + this.playerCount() + "}";
     }
     
 }

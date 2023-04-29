@@ -4,8 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.awt.Color;
@@ -35,7 +37,7 @@ public class GameSelection implements ActionListener {
     public JList<String> availableGamesList;
     private JScrollPane lobbiesPane;
     private String mapname;
-    private Map<String, String> lobbyNames = new HashMap<>();
+    private List<String> lobbiesNames = new ArrayList<>();
 
     public GameSelection(String mapname) {
         this.mapname = mapname;
@@ -91,23 +93,21 @@ public class GameSelection implements ActionListener {
         DefaultListModel<String> lobbiesList = new DefaultListModel<>();
         try {
             // open queue for receiving response from server
-            Map<String, Object> args = new HashMap<>();
-            args.put("x-expires", 60000); // queue time-to-live = 60s
-            Game.chan.queueDeclare(Game.u, false, false, false, args);
-            
+            Game.chan.queueDeclare(Game.u, false, false, false, null);
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String[] response = new String(delivery.getBody(), "UTF-8").split(";");
                 String status = response[0];
-                String[] lobbies = response[1].split(",");
                 switch (status) {
                 case "ok":
-                    for (var lobby: lobbies) {
-                        int playerCount = 0;
-                        String displayMsg = this.displayMsg(mapname, playerCount);
-                            this.lobbyNames.put(displayMsg, lobby);
-                            lobbiesList.addElement(displayMsg);
+                    String[] lobbies = response[1].split(",");
+                    for (int i = 0; i < lobbies.length; i+=2) {
+                            String id = lobbies[i];
+                            String playerCount = lobbies[i + 1];
+                            this.lobbiesNames.add(id);
+                            String dsp = this.displayMsg(mapname, Integer.parseInt(playerCount));
+                            lobbiesList.addElement(dsp);
                     }
-                        Game.chan.queueDelete(Game.u);
+                    Game.chan.queueDelete(Game.u);
                     break;
                 default:
                 }
@@ -119,16 +119,6 @@ public class GameSelection implements ActionListener {
             Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
             System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
             
-            // Game.session.lobbies(mapname).forEach(lobby -> {
-            //         try {
-            //             int playerCount = lobby.players().size();
-            //             String displayMsg = this.displayMsg(mapname, playerCount);
-            //         this.lobbyNames.put(displayMsg, lobby);
-            //         lobbiesList.addElement(displayMsg);
-            //         } catch (RemoteException e) {
-            //             e.printStackTrace();
-            //         }
-            //     });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -138,11 +128,11 @@ public class GameSelection implements ActionListener {
     private String displayMsg(String mapname, int playerCount) {
         switch (mapname) {
             case "FourCorners":
-                return "(" + this.lobbyNames.size() + ")(" + playerCount + "/4)";
+                return "(" + this.lobbiesNames.size() + ")(" + playerCount + "/4)";
             case "SmallVs":
-                return "(" + this.lobbyNames.size() + ")(" + playerCount + "/2)";
+                return "(" + this.lobbiesNames.size() + ")(" + playerCount + "/2)";
         }
-        return "(" + this.lobbyNames.size() + ")(" + playerCount + ")";
+        return "(" + this.lobbiesNames.size() + ")(" + playerCount + ")";
     }
     
     @Override

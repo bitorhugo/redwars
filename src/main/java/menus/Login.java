@@ -147,9 +147,7 @@ public class Login implements ActionListener{
     private void handleMessages(String action, String username, String secret) {
         try {
             // open queue for receiving response from server
-            Map<String, Object> args = new HashMap<>();
-            args.put("x-expires", 60000); // queue time-to-live = 60s
-            Game.chan.queueDeclare(username, false, false, false, args);
+            Game.chan.queueDeclare(username, false, false, false, null);
             System.out.println(" [*] Waiting for response from server.");
             
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -158,8 +156,7 @@ public class Login implements ActionListener{
                 switch (response) {
                 case "ok":
                     Game.u = username;
-                    // since user won't use this queue anymore, delete it
-                    Game.chan.queueDelete(username);
+                    Game.chan.queueDeleteNoWait(Game.u, false, false);
                     new StartMenu();
                     break;
                 default:

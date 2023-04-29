@@ -153,21 +153,18 @@ public class RedServer implements Serializable {
 
     private void handleAuth(String action, String username, String secret) throws RemoteUserNotFoundException, RemoteUserAlreadyRegisteredException {
         try {
-            Map<String, Object> args = new HashMap<>();
-            args.put("x-expires", 60000); // queue time-to-live = 60s 
-
             String message;
             switch (action) {
             case "login":
                 this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
-                this.chan.queueDeclare(username, false, false, false, args);
+                this.chan.queueDeclare(username, false, false, false, null);
                 message = "ok";
                 this.chan.basicPublish("", username, null, message.getBytes());
                 System.out.println(" [x] Sent '" + message + "'");
                 break;
             case "register":
                 this.db.insert(username, secret).orElseThrow(RemoteUserAlreadyRegisteredException::new);
-                this.chan.queueDeclare(username, false, false, false, args);
+                this.chan.queueDeclare(username, false, false, false, null);
                 message = "ok";
                 this.chan.basicPublish("", username, null, message.getBytes());
                 System.out.println(" [x] Sent '" + message + "'");
@@ -187,34 +184,42 @@ public class RedServer implements Serializable {
 
             String response;
             switch (action) {
+
             case "new":
                 username = message[1];
                 mapname = message[2];
+                
                 Lobby l = new Lobby(this.chan, mapname);
                 this.lobbies.put(l.getID(), l);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
+
+                this.chan.queueDeclare(username, false, false, false, null);
                 response = "ok;" + l.getID().toString();
                 this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
+                
             case "join":
                 UUID id = UUID.fromString(lobbyID);
                 Lobby join = this.lobbies.get(id);
                 break;
+                
             case "search":
                 mapname = message[1];
                 username = message[2];
-                ObjectMapper mapper = new ObjectMapper();
-                ArrayList<String> lobbies = new ArrayList<>();
+                
+                this.chan.queueDeclare(username, false, false, false, null);
+                response = "ok" + ";";
                 for (var lobby: this.lobbies.values()) {
-                    lobbies.add(lobby.getID().toString() + ";" + lobby.playerCount());
+                    response += lobby.getID() + "," + lobby.playerCount();
                 }
-                response = "ok" + ";" + lobbies;
                 this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
+                
             case "delete":
                 break;
+                
             }
         } catch (IOException e) {
             e.printStackTrace();
