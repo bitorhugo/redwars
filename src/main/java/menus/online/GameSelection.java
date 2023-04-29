@@ -2,7 +2,9 @@ package menus.online;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -17,8 +19,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
-import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
-import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
+import com.rabbitmq.client.DeliverCallback;
+
+import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -30,9 +33,9 @@ public class GameSelection implements ActionListener {
     public JButton Refresh = new JButton("Refresh");
     public JLabel PanelInfo = new JLabel("Game Selection");
     public JList<String> availableGamesList;
-    private JScrollPane lobbies;
+    private JScrollPane lobbiesPane;
     private String mapname;
-    private Map<String, SubjectRI> lobbyNames = new HashMap<>();
+    private Map<String, String> lobbyNames = new HashMap<>();
 
     public GameSelection(String mapname) {
         this.mapname = mapname;
@@ -75,9 +78,11 @@ public class GameSelection implements ActionListener {
     }
 
     private void gameList(Point size) {
-        lobbies = new JScrollPane(this.availableGamesList = new JList<>(this.availableGames(this.mapname)));
-        lobbies.setBounds(size.x+220, size.y, 140, 260);
-        Game.gui.add(lobbies);
+        this.lobbiesPane = new JScrollPane(this.availableGamesList =
+                                           new JList<>( this.availableGames(this.mapname) ));
+        this.lobbiesPane.setBounds(size.x+220, size.y, 140, 260);
+        Game.gui.add(lobbiesPane);
+        
 		this.availableGamesList.setBounds(0, 0, 140, 260);
 		this.availableGamesList.setSelectedIndex(0);
 	}
@@ -85,17 +90,46 @@ public class GameSelection implements ActionListener {
     private DefaultListModel<String> availableGames(String mapname) {
         DefaultListModel<String> lobbiesList = new DefaultListModel<>();
         try {
-            Game.session.lobbies(mapname).forEach(lobby -> {
-                    try {
-                        int playerCount = lobby.players().size();
+            // open queue for receiving response from server
+            Map<String, Object> args = new HashMap<>();
+            args.put("x-expires", 60000); // queue time-to-live = 60s
+            Game.chan.queueDeclare(Game.u, false, false, false, args);
+            
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String[] response = new String(delivery.getBody(), "UTF-8").split(";");
+                String status = response[0];
+                String[] lobbies = response[1].split(",");
+                switch (status) {
+                case "ok":
+                    for (var lobby: lobbies) {
+                        int playerCount = 0;
                         String displayMsg = this.displayMsg(mapname, playerCount);
-                    this.lobbyNames.put(displayMsg, lobby);
-                    lobbiesList.addElement(displayMsg);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
+                            this.lobbyNames.put(displayMsg, lobby);
+                            lobbiesList.addElement(displayMsg);
                     }
-                });
-        } catch (RemoteException e) {
+                        Game.chan.queueDelete(Game.u);
+                    break;
+                default:
+                }
+            };
+            Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
+            
+            // query the server for lobbies
+            String msg = "search" + ";" + mapname + ";" + Game.u;
+            Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+            System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+            
+            // Game.session.lobbies(mapname).forEach(lobby -> {
+            //         try {
+            //             int playerCount = lobby.players().size();
+            //             String displayMsg = this.displayMsg(mapname, playerCount);
+            //         this.lobbyNames.put(displayMsg, lobby);
+            //         lobbiesList.addElement(displayMsg);
+            //         } catch (RemoteException e) {
+            //             e.printStackTrace();
+            //         }
+            //     });
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return lobbiesList;
@@ -121,19 +155,19 @@ public class GameSelection implements ActionListener {
         }
 
         if (s == this.Enter) {
-            try {
-                String selected = this.availableGamesList.getSelectedValue();
-                UUID l = this.lobbyNames.get(selected).getID();                // get value from scroll pane
-                Game.lobby = Game.session.lobby(l);
-                System.out.println("INFO: Selected lobby " + Game.lobby);
-                int id = Game.lobby.players().size();
-                Game.obs = new ObserverImpl(id, Game.u, Game.cmd, Game.lobby, Game.g);
-                Game.lobby.attach(Game.obs);
-                new WaitQueueMenu();
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
+            String selected = this.availableGamesList.getSelectedValue();
+            // UUID l = this.lobbyNames.get(selected);
+            // Game.lobby = Game.session.lobby(l);
+            // System.out.println("INFO: Selected lobby " + Game.lobby);
+            // int id = Game.lobby.players().size();
+            // Game.obs = new ObserverImpl(id, Game.u, Game.cmd, Game.lobby, Game.g);
+            // Game.lobby.attach(Game.obs);
+            // new WaitQueueMenu();
+            // } catch (RemoteException e1) {
+            //     e1.printStackTrace();
+            // }
         }
+        
         if (s == this.Refresh) {
             new GameSelection(mapname);
         }

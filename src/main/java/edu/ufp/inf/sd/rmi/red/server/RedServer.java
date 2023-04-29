@@ -6,6 +6,7 @@ import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +16,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -136,8 +140,8 @@ public class RedServer implements Serializable {
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String []message = new String(delivery.getBody(), "UTF-8").split(";");
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE LOBBIES: Received {0}", message);
-                this.handleLobbies(message[1], message[0]);
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE LOBBIES: Received {0}", Arrays.asList(message));
+                this.handleLobbies(message);
             };
             
             this.chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
@@ -174,17 +178,46 @@ public class RedServer implements Serializable {
         }
     }
 
-    private void handleLobbies(String action, String mapname) {
-        switch (action) {
-        case "new":
-            Lobby l = new Lobby(this.chan, mapname);
-            this.lobbies.put(l.getID(), l);
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
-            break;
-        case "join":
-            break;
-        case "search":
-            break;
+    private void handleLobbies(String[] message) {
+        try {
+            String action = message[0];
+            String username = null;
+            String mapname = null;
+            String lobbyID = null;
+
+            String response;
+            switch (action) {
+            case "new":
+                username = message[1];
+                mapname = message[2];
+                Lobby l = new Lobby(this.chan, mapname);
+                this.lobbies.put(l.getID(), l);
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
+                response = "ok;" + l.getID().toString();
+                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
+                break;
+            case "join":
+                UUID id = UUID.fromString(lobbyID);
+                Lobby join = this.lobbies.get(id);
+                break;
+            case "search":
+                mapname = message[1];
+                username = message[2];
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayList<String> lobbies = new ArrayList<>();
+                for (var lobby: this.lobbies.values()) {
+                    lobbies.add(lobby.getID().toString() + ";" + lobby.playerCount());
+                }
+                response = "ok" + ";" + lobbies;
+                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
+                break;
+            case "delete":
+                break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

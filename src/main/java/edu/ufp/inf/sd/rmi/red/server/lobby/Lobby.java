@@ -16,20 +16,19 @@ import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby implements SubjectRI {
-
-    // client -> server channel
-    private Channel chan;
-    private String WQ_QUEUE_NAME;
-
-    // server -> client channel
-    private String FANOUT_EXCHANGE_NAME;
-    private final static String FANOUT_EXCHANGE_TYPE = "fanout";
     
     private UUID id;
-    private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
-    // private String state;
     private String mapname;
-    private TokenRing ring;
+    private transient TokenRing ring;
+    
+    private transient Channel chan;
+    // client -> server
+    private transient String WQ_QUEUE_NAME;
+    // server -> client channel
+    private transient String FANOUT_EXCHANGE_NAME;
+
+    private transient List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
+
 
     public Lobby(Channel chan, String mapname) {
         this(mapname);

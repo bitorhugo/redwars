@@ -158,6 +158,8 @@ public class Login implements ActionListener{
                 switch (response) {
                 case "ok":
                     Game.u = username;
+                    // since user won't use this queue anymore, delete it
+                    Game.chan.queueDelete(username);
                     new StartMenu();
                     break;
                 default:

@@ -77,6 +77,7 @@ public class Game extends JFrame {
     public static int cmd; // commander selected by client
 
     public static Channel chan;
+    public static String lobbyID;
     
 	public Game(Channel channel) {
         super (name);
