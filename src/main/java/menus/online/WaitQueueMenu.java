@@ -88,7 +88,7 @@ public class WaitQueueMenu implements ActionListener {
         }
         return players;
     }
-    
+ 
     @Override
     public void actionPerformed(ActionEvent e) {
         Object s = e.getSource();

@@ -200,8 +200,17 @@ public class RedServer implements Serializable {
                 break;
                 
             case "join":
-                UUID id = UUID.fromString(lobbyID);
-                Lobby join = this.lobbies.get(id);
+                lobbyID = message[1];
+                username = message[2];
+
+                var lo = this.lobbies.get(UUID.fromString(lobbyID));
+                lo.attach(null);
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined", username);
+
+                this.chan.queueDeclare(username, false, false, false, null);
+                response = "ok";
+                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
                 
             case "search":

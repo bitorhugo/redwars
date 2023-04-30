@@ -37,7 +37,7 @@ public class GameSelection implements ActionListener {
     public JList<String> availableGamesList;
     private JScrollPane lobbiesPane;
     private String mapname;
-    private List<String> lobbiesNames = new ArrayList<>();
+    private Map<String, String> lobbiesNames = new HashMap<>();
 
     public GameSelection(String mapname) {
         this.mapname = mapname;
@@ -103,8 +103,9 @@ public class GameSelection implements ActionListener {
                     for (int i = 0; i < lobbies.length; i+=2) {
                             String id = lobbies[i];
                             String playerCount = lobbies[i + 1];
-                            this.lobbiesNames.add(id);
+                            this.lobbiesNames.put(id, "");
                             String dsp = this.displayMsg(mapname, Integer.parseInt(playerCount));
+                            this.lobbiesNames.put(dsp, id);
                             lobbiesList.addElement(dsp);
                     }
                     Game.chan.queueDelete(Game.u);
@@ -118,7 +119,6 @@ public class GameSelection implements ActionListener {
             String msg = "search" + ";" + mapname + ";" + Game.u;
             Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
             System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
-            
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -146,6 +146,33 @@ public class GameSelection implements ActionListener {
 
         if (s == this.Enter) {
             String selected = this.availableGamesList.getSelectedValue();
+            var id = this.lobbiesNames.get(selected);
+
+            // query the server for lobbies
+            try {
+                Game.chan.queueDeclare(Game.u, false, false, false, null);
+                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                    String[] response = new String(delivery.getBody(), "UTF-8").split(";");
+                    String status = response[0];
+                    System.out.println("INFO: Status: " + status);
+                    switch (status) {
+                    case "ok":
+                        Game.lobbyID = id;
+                        Game.chan.queueDeleteNoWait(Game.u, false, false);
+                        // new WaitQueueMenu();
+                        break;
+                    }
+
+                };
+                Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
+                
+                String msg = "join" + ";" + id  + ";" + Game.u;
+                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+                System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            
             // UUID l = this.lobbyNames.get(selected);
             // Game.lobby = Game.session.lobby(l);
             // System.out.println("INFO: Selected lobby " + Game.lobby);
