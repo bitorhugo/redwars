@@ -2,7 +2,11 @@ package menus.online;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -14,6 +18,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
+import com.rabbitmq.client.DeliverCallback;
+
+import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -66,27 +73,42 @@ public class WaitQueueMenu implements ActionListener {
     }
 
     private void playerList(Point size) {
-        JScrollPane players = new JScrollPane(this.playersInQeueu = new JList<>(players()));
-        players.setBounds(size.x+220, size.y, 140, 260);
-        Game.gui.add(players);
+        JScrollPane pls = new JScrollPane(this.playersInQeueu = new JList<>(players()));
+        pls.setBounds(size.x+220, size.y, 140, 260);
+        Game.gui.add(pls);
 		this.playersInQeueu.setBounds(0, 0, 140, 260);
 		this.playersInQeueu.setSelectedIndex(0);
 	}
 
     private DefaultListModel<String> players() {
-        DefaultListModel<String> players = new DefaultListModel<>();
+        DefaultListModel<String> pls = new DefaultListModel<>();
         try {
-            Game.lobby.players().forEach(player -> {
-                    try {
-                        players.addElement(player.getUsername());
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
+            // open queue for receiving response from server
+            Game.chan.queueDeclare(Game.u, false, false, false, null);
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String[] response = new String(delivery.getBody(), "UTF-8").split(";");
+                String status = response[0];
+                switch (status) {
+                case "ok":
+                    for (int i = 1; i < response.length; ++i) {
+                        pls.addElement(response[i]);
                     }
-                });;
-        } catch (RemoteException e) {
+                    Game.chan.queueDelete(Game.u);
+                    break;
+                default:
+                }
+            };
+            Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
+            
+            // query the server for lobbies
+            String msg = "getPlayers" + ";" + Game.lobbyID + ";" + Game.u;
+            System.out.println(Game.lobbyID);
+            Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        return players;
+        return pls;
     }
  
     @Override
@@ -94,27 +116,27 @@ public class WaitQueueMenu implements ActionListener {
         Object s = e.getSource();
 
         if (s == this.Return) {
-            try {
-                // if lobby has only one player, cancel lobby
-                if (Game.lobby.players().size() == 1) {
-                    // close client channel connection
-                    Game.obs.closeChannel();
-                    // close client connection
-                    Game.obs.closeConnection();
+            // try {
+            //     // if lobby has only one player, cancel lobby
+            //     if (Game.lobby.players().size() == 1) {
+            //         // close client channel connection
+            //         Game.obs.closeChannel();
+            //         // close client connection
+            //         Game.obs.closeConnection();
 
-                    Game.lobby.detach(Game.obs);
-                    Game.session.deleteLobby(Game.lobby.getID());
-                }
-                else { // else just leave the lobby
-                    Game.lobby.detach(Game.obs);
-                    // close channel connection
-                    Game.obs.closeConnection();
-                }
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
-            Game.lobby = null;// set lobby to null
-            Game.obs = null;  // set observer to null
+            //         Game.lobby.detach(Game.obs);
+            //         Game.session.deleteLobby(Game.lobby.getID());
+            //     }
+            //     else { // else just leave the lobby
+            //         Game.lobby.detach(Game.obs);
+            //         // close channel connection
+            //         Game.obs.closeConnection();
+            //     }
+            // } catch (RemoteException e1) {
+            //     e1.printStackTrace();
+            // }
+            // Game.lobby = null;// set lobby to null
+            // Game.obs = null;  // set observer to null
             MenuHandler.CloseMenu();
             Game.gui.MenuScreen();
         }
@@ -124,13 +146,13 @@ public class WaitQueueMenu implements ActionListener {
         }
 
         if (s == this.Start) {
-            try {
-                // Start the game
-                Game.lobby.startGame();
-            } catch (RemoteException e1) {
-                String error = e1.getCause().toString();
-                Game.error.ShowError(error);
-            }
+            // try {
+            //     // Start the game
+            //     Game.lobby.startGame();
+            // } catch (RemoteException e1) {
+            //     String error = e1.getCause().toString();
+            //     Game.error.ShowError(error);
+            // }
         }
         
     }

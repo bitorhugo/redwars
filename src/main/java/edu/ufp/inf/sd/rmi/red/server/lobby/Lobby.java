@@ -38,6 +38,7 @@ public class Lobby implements SubjectRI {
     @JsonIgnore
     private transient List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
 
+    private List<String> players = new ArrayList<>();
 
     public Lobby(Channel chan, String mapname) {
         this(mapname);
@@ -79,8 +80,16 @@ public class Lobby implements SubjectRI {
         return this.observers;
     }
 
+    public void addPlayer(String username) {
+        this.players.add(username);
+    }
+
     public int playerCount() {
         return this.observers.size();
+    }
+
+    public List<String> getPlayers() {
+        return this.players;
     }
 
     @Override

@@ -66,8 +66,8 @@ public class OnlineMenu implements ActionListener {
                     switch (response[0]) {
                     case "ok":
                             Game.lobbyID = response[1];
-                            Game.chan.queueDeleteNoWait(Game.u, false, false);
-                            // new WaitQueueMenu();
+                            Game.chan.queueDelete(Game.u);
+                            new WaitQueueMenu();
                         break;
                     default:
                     }

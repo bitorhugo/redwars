@@ -95,18 +95,20 @@ public class GameSelection implements ActionListener {
             // open queue for receiving response from server
             Game.chan.queueDeclare(Game.u, false, false, false, null);
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String[] response = new String(delivery.getBody(), "UTF-8").split(";");
-                String status = response[0];
+                List<String> response = Arrays.asList(new String(delivery.getBody(), "UTF-8").split(";"));
+                String status = response.get(0);
                 switch (status) {
                 case "ok":
-                    String[] lobbies = response[1].split(",");
-                    for (int i = 0; i < lobbies.length; i+=2) {
+                    if (response.size() > 1) {
+                        String[] lobbies = response.get(1).split(",");
+                        for (int i = 0; i < lobbies.length; i+=2) {
                             String id = lobbies[i];
                             String playerCount = lobbies[i + 1];
                             this.lobbiesNames.put(id, "");
                             String dsp = this.displayMsg(mapname, Integer.parseInt(playerCount));
                             this.lobbiesNames.put(dsp, id);
                             lobbiesList.addElement(dsp);
+                        }
                     }
                     Game.chan.queueDelete(Game.u);
                     break;
@@ -159,10 +161,9 @@ public class GameSelection implements ActionListener {
                     case "ok":
                         Game.lobbyID = id;
                         Game.chan.queueDeleteNoWait(Game.u, false, false);
-                        // new WaitQueueMenu();
+                        new WaitQueueMenu();
                         break;
                     }
-
                 };
                 Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
                 

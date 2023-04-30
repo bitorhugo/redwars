@@ -190,6 +190,7 @@ public class RedServer implements Serializable {
                 mapname = message[2];
                 
                 Lobby l = new Lobby(this.chan, mapname);
+                l.addPlayer(username);
                 this.lobbies.put(l.getID(), l);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
 
@@ -204,7 +205,7 @@ public class RedServer implements Serializable {
                 username = message[2];
 
                 var lo = this.lobbies.get(UUID.fromString(lobbyID));
-                lo.attach(null);
+                lo.addPlayer(username);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined", username);
 
                 this.chan.queueDeclare(username, false, false, false, null);
@@ -219,8 +220,24 @@ public class RedServer implements Serializable {
                 
                 this.chan.queueDeclare(username, false, false, false, null);
                 response = "ok" + ";";
-                for (var lobby: this.lobbies.values()) {
-                    response += lobby.getID() + "," + lobby.playerCount();
+                if (!this.lobbies.isEmpty()) {
+                    for (var lobby: this.lobbies.values()) {
+                        response += lobby.getID() + "," + lobby.playerCount();
+                    }
+                }
+                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
+                break;
+
+            case "getPlayers":
+                lobbyID = message[1];
+                username = message[2];
+                
+                this.chan.queueDeclare(username, false, false, false, null);
+                response = "ok";
+                var players = this.lobbies.get(UUID.fromString(lobbyID)).getPlayers();
+                for (var p : players) {
+                    response += ";" + p;                    
                 }
                 this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
