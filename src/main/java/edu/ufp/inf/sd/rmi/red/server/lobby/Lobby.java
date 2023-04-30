@@ -84,8 +84,12 @@ public class Lobby implements SubjectRI {
         this.players.add(username);
     }
 
+    public void removePlayer(String username) {
+        this.players.remove(username);
+    }
+
     public int playerCount() {
-        return this.observers.size();
+        return this.players.size();
     }
 
     public List<String> getPlayers() {

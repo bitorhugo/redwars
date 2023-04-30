@@ -96,9 +96,6 @@ public class RedServer implements Serializable {
             this.chan.queueBind(queueName, AUTHEXCHANGENAME, "");
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Exchange {0} created", AUTHEXCHANGENAME);
 
-            this.chan.queueDeclare(LOGINQUEUENAME, false, false, false, null);
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Work-Queue {0} created", LOGINQUEUENAME);
-
             DeliverCallback deliverCallbackFanout = (consumerTag, delivery) -> {
                 String[] message = new String(delivery.getBody(), "UTF-8").split(";");
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE AUTH: Received {0}", Arrays.asList(message));
@@ -109,6 +106,10 @@ public class RedServer implements Serializable {
                     e.printStackTrace();
                 }
             };
+
+            
+            this.chan.queueDeclare(LOGINQUEUENAME, false, false, false, null);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Work-Queue {0} created", LOGINQUEUENAME);
 
             DeliverCallback deliverCallbackWorkQueue = (consumerTag, delivery) -> {
                 String[] message = new String(delivery.getBody(), "UTF-8").split(";");
@@ -137,14 +138,25 @@ public class RedServer implements Serializable {
             this.chan.exchangeDeclare(LOBBIESEXCHANGENAME, "fanout");
             String queueName = this.chan.queueDeclare().getQueue();
             this.chan.queueBind(queueName, LOBBIESEXCHANGENAME, "");
-
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            DeliverCallback deliverFanoutCallback = (consumerTag, delivery) -> {
                 String []message = new String(delivery.getBody(), "UTF-8").split(";");
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE LOBBIES: Received {0}", Arrays.asList(message));
                 this.handleLobbies(message);
             };
+
+            this.chan.queueDeclare(SEARCHLOBBYNAME, false, false, false, null);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Work-Queue {0} created", SEARCHLOBBYNAME);
+            DeliverCallback deliverCallbackWorkQueue = (consumerTag, delivery) -> {
+                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "WORK-QUEUE SearchLobbies: Received {0}", Arrays.asList(message));
+                this.handleLobbies(message);
+            };
             
-            this.chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+            this.chan.basicConsume(queueName, true, deliverFanoutCallback, consumerTag -> { });
+
+            // Consume from Work-Queue
+            boolean autoAck = true;
+            this.chan.basicConsume(SEARCHLOBBYNAME, autoAck, deliverCallbackWorkQueue, consumerTag -> {});
             
         } catch (IOException e){
             e.printStackTrace();
@@ -182,6 +194,7 @@ public class RedServer implements Serializable {
             String mapname = null;
             String lobbyID = null;
 
+            Lobby l = null;
             String response;
             switch (action) {
 
@@ -189,7 +202,7 @@ public class RedServer implements Serializable {
                 username = message[1];
                 mapname = message[2];
                 
-                Lobby l = new Lobby(this.chan, mapname);
+                l = new Lobby(this.chan, mapname);
                 l.addPlayer(username);
                 this.lobbies.put(l.getID(), l);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
@@ -204,9 +217,9 @@ public class RedServer implements Serializable {
                 lobbyID = message[1];
                 username = message[2];
 
-                var lo = this.lobbies.get(UUID.fromString(lobbyID));
-                lo.addPlayer(username);
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined", username);
+                l = this.lobbies.get(UUID.fromString(lobbyID));
+                l.addPlayer(username);
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined lobby {1}", new Object[]{username, lobbyID});
 
                 this.chan.queueDeclare(username, false, false, false, null);
                 response = "ok";
@@ -235,17 +248,37 @@ public class RedServer implements Serializable {
                 
                 this.chan.queueDeclare(username, false, false, false, null);
                 response = "ok";
-                var players = this.lobbies.get(UUID.fromString(lobbyID)).getPlayers();
-                for (var p : players) {
+                for (var p : this.lobbies.get(UUID.fromString(lobbyID)).getPlayers()) {
                     response += ";" + p;                    
                 }
                 this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
-                
-            case "delete":
+
+            case "startGame":
+                username = message[1];
+                response = "startGame;";
+                for (var pls : this.lobbies.get(UUID.fromString(lobbyID)).getPlayers()) {
+                    this.chan.basicPublish("", pls, null, response.getBytes("UTF-8"));                    
+                }
                 break;
                 
+            case "delete":
+                lobbyID = message[1];
+                username = message[2];
+                l = this.lobbies.get(UUID.fromString(lobbyID));
+                if (l.getPlayers().size() == 1) {
+                    this.lobbies.remove(UUID.fromString(lobbyID));
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", lobbyID);
+                }
+                else {
+                    l.removePlayer(username);
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed from Lobby {1}", new Object[]{username, lobbyID});
+                }
+                this.chan.queueDeclare(username, false, false, false, null);
+                response = "ok";
+                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
+                break;
             }
         } catch (IOException e) {
             e.printStackTrace();

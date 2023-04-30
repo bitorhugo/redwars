@@ -11,8 +11,6 @@ import engine.Game;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.awt.Point;
 
 public class Login implements ActionListener{
@@ -149,7 +147,6 @@ public class Login implements ActionListener{
             // open queue for receiving response from server
             Game.chan.queueDeclare(username, false, false, false, null);
             System.out.println(" [*] Waiting for response from server.");
-            
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String response = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + response + "'");
@@ -180,6 +177,7 @@ public class Login implements ActionListener{
                 System.out.println("INFO: Success! Message " + credentials + " sent to Login Queue.");
                 break;
             case "register":
+                Game.chan.exchangeDeclare(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "fanout");
                 Game.chan.basicPublish(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "", null, credentials.getBytes("UTF-8"));
                 System.out.println("INFO: Success! Message " + credentials + " sent to Exchange AUTH.");
                 break;

@@ -118,9 +118,10 @@ public class GameSelection implements ActionListener {
             Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
             
             // query the server for lobbies
+            Game.chan.queueDeclare("search_lobby", false, false, false, null);
             String msg = "search" + ";" + mapname + ";" + Game.u;
-            Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
-            System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+            Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
+            System.out.println("INFO: Success! Message " + msg + " sent to Work-Queue search-lobby.");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -166,24 +167,14 @@ public class GameSelection implements ActionListener {
                     }
                 };
                 Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
-                
+
+                Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
                 String msg = "join" + ";" + id  + ";" + Game.u;
                 Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
                 System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            
-            // UUID l = this.lobbyNames.get(selected);
-            // Game.lobby = Game.session.lobby(l);
-            // System.out.println("INFO: Selected lobby " + Game.lobby);
-            // int id = Game.lobby.players().size();
-            // Game.obs = new ObserverImpl(id, Game.u, Game.cmd, Game.lobby, Game.g);
-            // Game.lobby.attach(Game.obs);
-            // new WaitQueueMenu();
-            // } catch (RemoteException e1) {
-            //     e1.printStackTrace();
-            // }
         }
         
         if (s == this.Refresh) {

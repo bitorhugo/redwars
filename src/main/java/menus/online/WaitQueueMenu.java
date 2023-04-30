@@ -3,10 +3,6 @@ package menus.online;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -93,17 +89,21 @@ public class WaitQueueMenu implements ActionListener {
                     for (int i = 1; i < response.length; ++i) {
                         pls.addElement(response[i]);
                     }
-                    Game.chan.queueDelete(Game.u);
+                    Game.chan.queueDelete(Game.u); // maybe do not delete queue yet, since we may need it to initialize the game
                     break;
+                // case "startgame":
+                //     Game.chan.queueDelete(Game.u);
+                //     Game.g.startGame();
+                //     break;
                 default:
                 }
             };
             Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
             
             // query the server for lobbies
+            Game.chan.queueDeclare("search_lobby", false, false, false, null);
             String msg = "getPlayers" + ";" + Game.lobbyID + ";" + Game.u;
-            System.out.println(Game.lobbyID);
-            Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+            Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -116,29 +116,28 @@ public class WaitQueueMenu implements ActionListener {
         Object s = e.getSource();
 
         if (s == this.Return) {
-            // try {
-            //     // if lobby has only one player, cancel lobby
-            //     if (Game.lobby.players().size() == 1) {
-            //         // close client channel connection
-            //         Game.obs.closeChannel();
-            //         // close client connection
-            //         Game.obs.closeConnection();
+            try {
+                Game.chan.queueDeclare(Game.u, false, false, false, null);
+                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                    String[] response = new String(delivery.getBody(), "UTF-8").split(";");
+                    String status = response[0];
+                    switch (status) {
+                    case "ok":
+                        System.out.println("INFO: Message " + status + " received, lobby deleted");
+                        Game.chan.queueDelete(Game.u); // maybe do not delete queue yet, since we may need it to initialize the game
+                        MenuHandler.CloseMenu();
+                        Game.gui.MenuScreen();
+                        break;
+                    }
+                };
+                Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
 
-            //         Game.lobby.detach(Game.obs);
-            //         Game.session.deleteLobby(Game.lobby.getID());
-            //     }
-            //     else { // else just leave the lobby
-            //         Game.lobby.detach(Game.obs);
-            //         // close channel connection
-            //         Game.obs.closeConnection();
-            //     }
-            // } catch (RemoteException e1) {
-            //     e1.printStackTrace();
-            // }
-            // Game.lobby = null;// set lobby to null
-            // Game.obs = null;  // set observer to null
-            MenuHandler.CloseMenu();
-            Game.gui.MenuScreen();
+                Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+                String msg = "delete" + ";" + Game.lobbyID + ";" + Game.u;
+                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
 
         if (s == this.Refresh) {
@@ -146,6 +145,10 @@ public class WaitQueueMenu implements ActionListener {
         }
 
         if (s == this.Start) {
+            // try {
+                
+            // } catch (IOException e1){
+            
             // try {
             //     // Start the game
             //     Game.lobby.startGame();
