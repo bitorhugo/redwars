@@ -16,7 +16,6 @@ import javax.swing.JScrollPane;
 
 import com.rabbitmq.client.DeliverCallback;
 
-import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -78,36 +77,31 @@ public class WaitQueueMenu implements ActionListener {
 
     private DefaultListModel<String> players() {
         DefaultListModel<String> pls = new DefaultListModel<>();
-        try {
-            // open queue for receiving response from server
-            Game.chan.queueDeclare(Game.u, false, false, false, null);
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String[] response = new String(delivery.getBody(), "UTF-8").split(";");
-                String status = response[0];
-                switch (status) {
-                case "ok":
-                    for (int i = 1; i < response.length; ++i) {
-                        pls.addElement(response[i]);
-                    }
-                    Game.chan.queueDelete(Game.u); // maybe do not delete queue yet, since we may need it to initialize the game
-                    break;
-                // case "startgame":
-                //     Game.chan.queueDelete(Game.u);
-                //     Game.g.startGame();
-                //     break;
-                default:
-                }
-            };
-            Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
+        // try {
+        //     // open queue for receiving response from server
+        //     Game.chan.queueDeclare(Game.u, false, false, false, null);
+        //     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        //         String[] response = new String(delivery.getBody(), "UTF-8").split(";");
+        //         String status = response[0];
+        //         switch (status) {
+        //         case "ok":
+        //             for (int i = 1; i < response.length; ++i) {
+        //                 pls.addElement(response[i]);
+        //             }
+        //             Game.chan.queueDelete(Game.u); // maybe do not delete queue yet, since we may need it to initialize the game
+        //             break;
+        //         }
+        //     };
+        //     Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
             
-            // query the server for lobbies
-            Game.chan.queueDeclare("search_lobby", false, false, false, null);
-            String msg = "getPlayers" + ";" + Game.lobbyID + ";" + Game.u;
-            Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
+        //     // query the server for lobbies
+        //     Game.chan.queueDeclare("search_lobby", false, false, false, null);
+        //     String msg = "getPlayers" + ";" + Game.lobbyID + ";" + Game.u;
+        //     Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
         return pls;
     }
  
@@ -116,28 +110,31 @@ public class WaitQueueMenu implements ActionListener {
         Object s = e.getSource();
 
         if (s == this.Return) {
-            try {
-                Game.chan.queueDeclare(Game.u, false, false, false, null);
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String[] response = new String(delivery.getBody(), "UTF-8").split(";");
-                    String status = response[0];
-                    switch (status) {
-                    case "ok":
-                        System.out.println("INFO: Message " + status + " received, lobby deleted");
-                        Game.chan.queueDelete(Game.u); // maybe do not delete queue yet, since we may need it to initialize the game
-                        MenuHandler.CloseMenu();
-                        Game.gui.MenuScreen();
-                        break;
-                    }
-                };
-                Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
+            // try {
+            //     Game.chan.queueDeclare(Game.u, false, false, false, null);
+            //     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            //         String[] response = new String(delivery.getBody(), "UTF-8").split(";");
+            //         String status = response[0];
+            //         switch (status) {
+            //         case "ok":
+            //             System.out.println("INFO: Message " + status + " received, leaving lobby");
+            //             Game.lobbyID = null;
+            //             Game.chan.queueDelete(Game.u);
+            //             MenuHandler.CloseMenu();
+            //             Game.gui.MenuScreen();
+            //             break;
+            //         }
+            //     };
+            //     Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
 
-                Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
-                String msg = "delete" + ";" + Game.lobbyID + ";" + Game.u;
-                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            //     Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+            //     String msg = "delete" + ";" + Game.lobbyID + ";" + Game.u;
+            //     Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+            // } catch (IOException e1) {
+            //     e1.printStackTrace();
+            // }
+        MenuHandler.CloseMenu();
+        Game.gui.MenuScreen();
         }
 
         if (s == this.Refresh) {
@@ -145,6 +142,17 @@ public class WaitQueueMenu implements ActionListener {
         }
 
         if (s == this.Start) {
+            try {
+
+                // start to listen for messages coming from lobby exchange
+                
+                Game.chan.queueDeclare("search_lobby", false, false, false, null);
+                String msg = "startGame" + ";" + Game.lobbyID + ";" + Game.u;
+                Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            
             // try {
                 
             // } catch (IOException e1){

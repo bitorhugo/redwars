@@ -8,12 +8,9 @@ import java.awt.Point;
 
 import javax.swing.JButton;
 
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.DeliverCallback;
 
-
-import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -32,6 +29,8 @@ public class OnlineMenu implements ActionListener {
         this.SetBounds(size);
         this.addActionListeners();
         this.addGui();
+
+        // this.listenForResponse();
     }
 
     private void SetBounds(Point size) {
@@ -58,28 +57,12 @@ public class OnlineMenu implements ActionListener {
 
         if (s == New) {
             try {
-                // open queue for receiving response from server
-                Game.chan.queueDeclare(Game.u, false, false, false, null);
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String[] response = new String(delivery.getBody(), "UTF-8").split(";");
-                    System.out.println(" [x] Received " + Arrays.asList(response));
-                    switch (response[0]) {
-                    case "ok":
-                            Game.lobbyID = response[1];
-                            Game.chan.queueDelete(Game.u);
-                            new WaitQueueMenu();
-                        break;
-                    default:
-                    }
-                };
-                Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
-
                 // fanout message of new looby
                 Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
                 String msg = "new" + ";" + Game.u + ";" + this.mapname;
                 Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
                 System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
-
+                new WaitQueueMenu();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

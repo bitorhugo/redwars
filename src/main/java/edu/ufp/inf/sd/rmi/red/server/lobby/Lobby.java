@@ -18,7 +18,7 @@ import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby implements SubjectRI {
     
-    private UUID id;
+    private String id;
     private String mapname;
     
     @JsonIgnore
@@ -40,15 +40,15 @@ public class Lobby implements SubjectRI {
 
     private List<String> players = new ArrayList<>();
 
-    public Lobby(Channel chan, String mapname) {
-        this(mapname);
+    public Lobby(Channel chan, String mapname, int lobbyID) {
+        this(mapname, lobbyID);
         this.chan = chan;
         this.WQ_QUEUE_NAME = this.id.toString();
     }
 
-    public Lobby(String mapname) {
+    public Lobby(String mapname, int lobbyID) {
         super();
-        this.id = UUID.randomUUID();
+        this.id = String.valueOf(lobbyID);
         this.mapname = mapname;
     }
 
@@ -66,12 +66,12 @@ public class Lobby implements SubjectRI {
     }
 
     @Override
-    public String getMapname() throws RemoteException {
+    public String getMapname() {
         return this.mapname;
     }
 
     @Override
-    public UUID getID() {
+    public String getID() {
         return this.id;
     }
 
@@ -113,27 +113,27 @@ public class Lobby implements SubjectRI {
     @Override
     public void startGame() throws RemoteNotEnoughPlayersException {
         if (this.check_requirements()) {
-            System.out.println("INFO: Starting game");
-
+            
             // initialize token ring
             this.ring = new TokenRing(Clock.systemUTC(), this.observers.size());
 
-            // create publish channel
             this.FANOUT_EXCHANGE_NAME = this.id.toString();
             this.notifyStartGame();
         }
     }
 
+
     private void notifyStartGame() {
-        // iterate over obs list and tell them to start the game
-        this.observers.forEach(o -> {
-                try {
-                    System.out.println("INFO: Staring game for: " + o);
-                    o.startGame(this.FANOUT_EXCHANGE_NAME);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            });
+        
+        // // iterate over obs list and tell them to start the game
+        // this.observers.forEach(o -> {
+        //         try {
+        //             System.out.println("INFO: Staring game for: " + o);
+        //             o.startGame(this.FANOUT_EXCHANGE_NAME);
+        //         } catch (RemoteException e) {
+        //             e.printStackTrace();
+        //         }
+        //     });
         
         // start listening for state changes from clients
         this.listenStateChanges();

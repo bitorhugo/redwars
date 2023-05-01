@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -21,9 +23,11 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.DeliverCallback;
 
-import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
 import engine.Game;
 import menus.MenuHandler;
 
@@ -92,37 +96,21 @@ public class GameSelection implements ActionListener {
     private DefaultListModel<String> availableGames(String mapname) {
         DefaultListModel<String> lobbiesList = new DefaultListModel<>();
         try {
-            // open queue for receiving response from server
-            Game.chan.queueDeclare(Game.u, false, false, false, null);
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                List<String> response = Arrays.asList(new String(delivery.getBody(), "UTF-8").split(";"));
-                String status = response.get(0);
-                switch (status) {
-                case "ok":
-                    if (response.size() > 1) {
-                        String[] lobbies = response.get(1).split(",");
-                        for (int i = 0; i < lobbies.length; i+=2) {
-                            String id = lobbies[i];
-                            String playerCount = lobbies[i + 1];
-                            this.lobbiesNames.put(id, "");
-                            String dsp = this.displayMsg(mapname, Integer.parseInt(playerCount));
-                            this.lobbiesNames.put(dsp, id);
-                            lobbiesList.addElement(dsp);
-                        }
-                    }
-                    Game.chan.queueDelete(Game.u);
-                    break;
-                default:
-                }
-            };
-            Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
+            //             String[] lobbies = response.get(1).split(",");
             
-            // query the server for lobbies
-            Game.chan.queueDeclare("search_lobby", false, false, false, null);
-            String msg = "search" + ";" + mapname + ";" + Game.u;
-            Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
-            System.out.println("INFO: Success! Message " + msg + " sent to Work-Queue search-lobby.");
-        } catch (IOException e) {
+            String []lobbies = call().split(",");
+            
+            for (int i = 0; i < lobbies.length; i += 2) {
+                String id = lobbies[i];
+                String playerCount = lobbies[i + 1];
+                this.lobbiesNames.put(id, "");
+                String dsp = this.displayMsg(mapname, Integer.parseInt(playerCount));
+                this.lobbiesNames.put(dsp, id);
+                lobbiesList.addElement(dsp);
+                System.out.println(lobbies);
+            }
+            
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return lobbiesList;
@@ -137,6 +125,34 @@ public class GameSelection implements ActionListener {
         }
         return "(" + this.lobbiesNames.size() + ")(" + playerCount + ")";
     }
+
+    private String call() throws IOException, InterruptedException, ExecutionException {
+
+            String function = mapname;
+            
+            final String corrId = UUID.randomUUID().toString();
+            String replyQueueName = Game.chan.queueDeclare().getQueue();
+            AMQP.BasicProperties props = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(corrId)
+                .replyTo(replyQueueName)
+                .build();
+
+            Game.chan.basicPublish("", RPCEnum.RPC_SEARCH_LOBBIES.getValue(), props, function.getBytes("UTF-8"));
+
+            final CompletableFuture<String> response = new CompletableFuture<>();
+
+            String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+                    if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                        response.complete(new String(delivery.getBody(), "UTF-8"));
+                    }
+                }, consumerTag -> {
+                });
+
+            String result = response.get();
+            Game.chan.basicCancel(ctag);
+            return result;
+    }
     
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -148,32 +164,14 @@ public class GameSelection implements ActionListener {
         }
 
         if (s == this.Enter) {
+            try {
             String selected = this.availableGamesList.getSelectedValue();
             var id = this.lobbiesNames.get(selected);
-
-            // query the server for lobbies
-            try {
-                Game.chan.queueDeclare(Game.u, false, false, false, null);
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String[] response = new String(delivery.getBody(), "UTF-8").split(";");
-                    String status = response[0];
-                    System.out.println("INFO: Status: " + status);
-                    switch (status) {
-                    case "ok":
-                        Game.lobbyID = id;
-                        Game.chan.queueDeleteNoWait(Game.u, false, false);
-                        new WaitQueueMenu();
-                        break;
-                    }
-                };
-                Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
-
-                Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
-                String msg = "join" + ";" + id  + ";" + Game.u;
-                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
-                System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+            String msg = "join" + ";" + id  + ";" + Game.u;
+            Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+            System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+            } catch (Exception e1) {
             }
         }
         

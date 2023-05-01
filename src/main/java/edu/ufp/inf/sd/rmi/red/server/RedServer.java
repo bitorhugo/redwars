@@ -4,21 +4,19 @@ import edu.ufp.inf.sd.rmi.red.model.db.VolatileDB;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserAlreadyRegisteredException;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
+
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -37,19 +35,16 @@ import com.rabbitmq.client.DeliverCallback;
  * @author Rui S. Moreira
  * @version 3.0
  */
-public class RedServer implements Serializable {
+public class RedServer {
 
     private transient Connection conn;
     private transient Channel chan;
     
     private static final String AUTHEXCHANGENAME = "auth";
     private static final String LOBBIESEXCHANGENAME = "lobbies";
-
-    private static final String LOGINQUEUENAME = "login";
-    private static final String SEARCHLOBBYNAME = "search_lobby";
     
     private VolatileDB db = new VolatileDB();
-    private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * @param args 
@@ -67,11 +62,11 @@ public class RedServer implements Serializable {
         return this.db;
     }
 
-    public Map<UUID, Lobby> getLobbies() {
+    public Map<String, Lobby> getLobbies() {
         return this.lobbies;
     }
 
-    public void setLobbies(Map<UUID, Lobby> lobbies) {
+    public void setLobbies(Map<String, Lobby> lobbies) {
         this.lobbies = lobbies;
     }
 
@@ -106,28 +101,9 @@ public class RedServer implements Serializable {
                     e.printStackTrace();
                 }
             };
-
-            
-            this.chan.queueDeclare(LOGINQUEUENAME, false, false, false, null);
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Work-Queue {0} created", LOGINQUEUENAME);
-
-            DeliverCallback deliverCallbackWorkQueue = (consumerTag, delivery) -> {
-                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "WORK-QUEUE Login: Received {0}", Arrays.asList(message));
-                try {
-                    this.handleAuth("login", message[0], message[1]);
-                } catch (RemoteUserNotFoundException | RemoteUserAlreadyRegisteredException e) {
-                    e.printStackTrace();
-                }
-            };
-
-            // Consume from fanout exchange
             this.chan.basicConsume(queueName, true, deliverCallbackFanout, consumerTag -> { });
-
-            // Consume from Work-Queue
-            boolean autoAck = true;
-            this.chan.basicConsume(LOGINQUEUENAME, autoAck, deliverCallbackWorkQueue, consumerTag -> {});
             
+            this.LoginRPC();
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -144,21 +120,10 @@ public class RedServer implements Serializable {
                 this.handleLobbies(message);
             };
 
-            this.chan.queueDeclare(SEARCHLOBBYNAME, false, false, false, null);
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Success! Work-Queue {0} created", SEARCHLOBBYNAME);
-            DeliverCallback deliverCallbackWorkQueue = (consumerTag, delivery) -> {
-                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "WORK-QUEUE SearchLobbies: Received {0}", Arrays.asList(message));
-                this.handleLobbies(message);
-            };
-            
             this.chan.basicConsume(queueName, true, deliverFanoutCallback, consumerTag -> { });
 
-            // Consume from Work-Queue
-            boolean autoAck = true;
-            this.chan.basicConsume(SEARCHLOBBYNAME, autoAck, deliverCallbackWorkQueue, consumerTag -> {});
-            
-        } catch (IOException e){
+            this.searchLobbiesRPC();
+        } catch (Exception e){
             e.printStackTrace();
         }
     }
@@ -176,7 +141,7 @@ public class RedServer implements Serializable {
                 break;
             case "register":
                 this.db.insert(username, secret).orElseThrow(RemoteUserAlreadyRegisteredException::new);
-                this.chan.queueDeclare(username, false, false, false, null);
+                // this.chan.queueDeclare(username, false, false, false, null);
                 message = "ok";
                 this.chan.basicPublish("", username, null, message.getBytes());
                 System.out.println(" [x] Sent '" + message + "'");
@@ -195,60 +160,34 @@ public class RedServer implements Serializable {
             String lobbyID = null;
 
             Lobby l = null;
-            String response;
+            String response = null;
+            
             switch (action) {
 
-            case "new":
+            case "new": // message = new;username;mapname
                 username = message[1];
                 mapname = message[2];
-                
-                l = new Lobby(this.chan, mapname);
+                l = new Lobby(this.chan, mapname, this.lobbies.size());
                 l.addPlayer(username);
                 this.lobbies.put(l.getID(), l);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
-
-                this.chan.queueDeclare(username, false, false, false, null);
-                response = "ok;" + l.getID().toString();
-                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
                 
             case "join":
                 lobbyID = message[1];
                 username = message[2];
-
-                l = this.lobbies.get(UUID.fromString(lobbyID));
+                l = this.lobbies.get(lobbyID);
                 l.addPlayer(username);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined lobby {1}", new Object[]{username, lobbyID});
-
-                this.chan.queueDeclare(username, false, false, false, null);
-                response = "ok";
-                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
-                break;
-                
-            case "search":
-                mapname = message[1];
-                username = message[2];
-                
-                this.chan.queueDeclare(username, false, false, false, null);
-                response = "ok" + ";";
-                if (!this.lobbies.isEmpty()) {
-                    for (var lobby: this.lobbies.values()) {
-                        response += lobby.getID() + "," + lobby.playerCount();
-                    }
-                }
-                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
 
             case "getPlayers":
                 lobbyID = message[1];
                 username = message[2];
                 
-                this.chan.queueDeclare(username, false, false, false, null);
+                // this.chan.queueDeclare(username, false, false, false, null);
                 response = "ok";
-                for (var p : this.lobbies.get(UUID.fromString(lobbyID)).getPlayers()) {
+                for (var p : this.lobbies.get(lobbyID).getPlayers()) {
                     response += ";" + p;                    
                 }
                 this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
@@ -256,33 +195,104 @@ public class RedServer implements Serializable {
                 break;
 
             case "startGame":
-                username = message[1];
-                response = "startGame;";
-                for (var pls : this.lobbies.get(UUID.fromString(lobbyID)).getPlayers()) {
-                    this.chan.basicPublish("", pls, null, response.getBytes("UTF-8"));                    
-                }
+                // lobbyID = message[1];
+                // username = message[2];
+                // response = "startGame;";
+                // for (var pls : this.lobbies.get(lobbyID).getPlayers()) {
+                //     // this.chan.queueDeclare(username, false, false, false, null);
+                //     // this.chan.basicPublish("", pls, null, response.getBytes("UTF-8"));
+                //     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent to player {1}", new Object[]{response, pls});
+                // }
+                // Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Game from lobby {0} starting.", lobbyID);
                 break;
                 
             case "delete":
                 lobbyID = message[1];
                 username = message[2];
-                l = this.lobbies.get(UUID.fromString(lobbyID));
+                l = this.lobbies.get(lobbyID);
                 if (l.getPlayers().size() == 1) {
-                    this.lobbies.remove(UUID.fromString(lobbyID));
+                    this.lobbies.remove(lobbyID);
                     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", lobbyID);
                 }
                 else {
                     l.removePlayer(username);
                     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed from Lobby {1}", new Object[]{username, lobbyID});
                 }
-                this.chan.queueDeclare(username, false, false, false, null);
-                response = "ok";
-                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
                 break;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void searchLobbiesRPC() {
+        try {
+            this.chan.queueDeclare(RPCEnum.RPC_SEARCH_LOBBIES.getValue(), false, false, false, null);
+            this.chan.queuePurge(RPCEnum.RPC_SEARCH_LOBBIES.getValue());
+
+            this.chan.basicQos(1);
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(delivery.getProperties().getCorrelationId())
+                .build();
+
+                String response = "";
+                try {
+                    String mapname = new String(delivery.getBody(), "UTF-8");
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for {0} lobbies", mapname);
+                    var lobbies = this.lobbies.entrySet().stream()
+                        .filter(lobby -> {
+                                return lobby.getValue().getMapname().compareTo(mapname) == 0;
+                            })
+                        .map(e -> e.getValue())
+                        .collect(Collectors.toList());
+                    for (var l : lobbies) {
+                        response += l.getID() + "," + l.playerCount() + ",";
+                    }
+                    System.out.println(response);
+                } catch (RuntimeException e) {
+                    System.out.println(" [.] " + e);
+                } finally {
+                    this.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                    this.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                }
+            };
+            this.chan.basicConsume(RPCEnum.RPC_SEARCH_LOBBIES.getValue(), false, deliverCallback, (consumerTag -> {}));
+        } catch (Exception e) {
+        }
+    }
+
+    private void LoginRPC() {
+        try {
+            this.chan.queueDeclare(RPCEnum.RPC_LOGIN.getValue(), false, false, false, null);
+            this.chan.queuePurge(RPCEnum.RPC_LOGIN.getValue());
+
+            this.chan.basicQos(1);
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(delivery.getProperties().getCorrelationId())
+                .build();
+
+                String response = "";
+                try {
+                    String []cred = new String(delivery.getBody(), "UTF-8").split(";");
+                    String username = cred[0];
+                    String secret = cred[1];
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for {0} lobbies");
+                    this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
+                } catch (RuntimeException e) {
+                    System.out.println(" [.] " + e);
+                } finally {
+                    this.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                    this.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                }
+            };
+            this.chan.basicConsume(RPCEnum.RPC_LOGIN.getValue(), false, deliverCallback, (consumerTag -> {}));
+        } catch (Exception e) {}        
     }
 
     public static void main(String[] args) {

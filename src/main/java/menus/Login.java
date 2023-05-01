@@ -5,7 +5,7 @@ import javax.swing.JTextField;
 
 import com.rabbitmq.client.DeliverCallback;
 
-import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
 import engine.Game;
 
 import java.awt.event.ActionEvent;
@@ -146,14 +146,14 @@ public class Login implements ActionListener{
         try {
             // open queue for receiving response from server
             Game.chan.queueDeclare(username, false, false, false, null);
-            System.out.println(" [*] Waiting for response from server.");
+            Game.chan.basicQos(1);
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String response = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + response + "'");
                 switch (response) {
                 case "ok":
                     Game.u = username;
-                    Game.chan.queueDeleteNoWait(Game.u, false, false);
+                    Game.chan.queueDelete(Game.u, false, false);
                     new StartMenu();
                     break;
                 default:

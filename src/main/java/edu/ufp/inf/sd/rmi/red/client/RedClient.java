@@ -14,7 +14,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.AMQP.Exchange;
 
-import edu.ufp.inf.sd.rmi.red.client.exchange.ExchangeEnum;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
+
 
 
 

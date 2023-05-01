@@ -73,10 +73,10 @@ public class Game extends JFrame {
 
     public static Game g; // self reference
     public static boolean isOnline = false;
-    public static String u; // username
     public static int cmd; // commander selected by client
 
-    public static Channel chan;
+    public static Channel chan; 
+    public static String u; // username
     public static String lobbyID;
     
 	public Game(Channel channel) {
