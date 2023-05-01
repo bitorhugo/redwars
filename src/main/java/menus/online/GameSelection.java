@@ -96,10 +96,8 @@ public class GameSelection implements ActionListener {
     private DefaultListModel<String> availableGames(String mapname) {
         DefaultListModel<String> lobbiesList = new DefaultListModel<>();
         try {
-            //             String[] lobbies = response.get(1).split(",");
             
             String []lobbies = call().split(",");
-            
             for (int i = 0; i < lobbies.length; i += 2) {
                 String id = lobbies[i];
                 String playerCount = lobbies[i + 1];

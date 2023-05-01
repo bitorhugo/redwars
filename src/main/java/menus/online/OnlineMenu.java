@@ -59,7 +59,7 @@ public class OnlineMenu implements ActionListener {
             try {
                 // fanout message of new looby
                 Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
-                String msg = "new" + ";" + Game.u + ";" + this.mapname;
+                String msg = "new" + ";" + Game.u + ";" + this.mapname + ";" + Game.cmd;
                 Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
                 System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
                 new WaitQueueMenu();

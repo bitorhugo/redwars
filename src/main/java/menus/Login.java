@@ -153,6 +153,8 @@ public class Login implements ActionListener{
                 switch (response) {
                 case "ok":
                     Game.u = username;
+                    Game.rpc = Game.rpcStartGameGui + Game.u;
+                    Game.rpcStartGame();
                     Game.chan.queueDelete(Game.u, false, false);
                     new StartMenu();
                     break;

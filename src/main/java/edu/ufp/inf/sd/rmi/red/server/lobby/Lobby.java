@@ -5,8 +5,9 @@ import java.rmi.RemoteException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,6 +21,7 @@ public class Lobby implements SubjectRI {
     
     private String id;
     private String mapname;
+    private List<String> players = new ArrayList<>();
     
     @JsonIgnore
     private transient TokenRing ring;
@@ -38,7 +40,6 @@ public class Lobby implements SubjectRI {
     @JsonIgnore
     private transient List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
 
-    private List<String> players = new ArrayList<>();
 
     public Lobby(Channel chan, String mapname, int lobbyID) {
         this(mapname, lobbyID);
@@ -140,7 +141,7 @@ public class Lobby implements SubjectRI {
         //     });
         
         // start listening for state changes from clients
-        this.listenStateChanges();
+        // this.listenStateChanges();
     }
 
     private void listenStateChanges() {
@@ -176,7 +177,8 @@ public class Lobby implements SubjectRI {
         int playerCount = this.playerCount();
         switch (this.mapname) {
         case "FourCorners":
-            if (playerCount == 4) {return true;}
+            if (playerCount == 4) {
+                return true;}
             break;
         case "SmallVs":
             if (playerCount == 2) {return true;}

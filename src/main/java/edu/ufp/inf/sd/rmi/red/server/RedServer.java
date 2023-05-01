@@ -4,13 +4,19 @@ import edu.ufp.inf.sd.rmi.red.model.db.VolatileDB;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserAlreadyRegisteredException;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
+import edu.ufp.inf.sd.rmi.red.server.lobby.RemoteNotEnoughPlayersException;
 import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,7 +131,7 @@ public class RedServer {
             // listen for rpc calls
             this.searchLobbiesRPC();
             this.getPlayersRPC();
-            
+            this.startGameRPC();
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -160,6 +166,7 @@ public class RedServer {
             String action = message[0];
             String username = null;
             String mapname = null;
+            String cmd = null;
             String lobbyID = null;
 
             Lobby l = null;
@@ -170,6 +177,7 @@ public class RedServer {
             case "new": // message = new;username;mapname
                 username = message[1];
                 mapname = message[2];
+                cmd = message[3];
                 l = new Lobby(this.chan, mapname, this.lobbies.size());
                 l.addPlayer(username);
                 this.lobbies.put(l.getID(), l);
@@ -321,6 +329,52 @@ public class RedServer {
             };
             this.chan.basicConsume(RPCEnum.RPC_GET_PLAYERS.getValue(), false, deliverCallback, (consumerTag -> {}));
         } catch (Exception e) {}        
+    }
+
+    private void startGameRPC() {
+        try {
+            this.chan.queueDeclare(RPCEnum.RPC_START_GAME.getValue(), false, false, false, null);
+            this.chan.queuePurge(RPCEnum.RPC_START_GAME.getValue());
+
+            this.chan.basicQos(1);
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                try {
+                    String username = new String(delivery.getBody(), "UTF-8");
+                    System.out.println("Received [x] " + username);
+                    var lobby = this.lobbies.entrySet().stream()
+                        .filter(set -> {
+                                return set.getValue().containsPlayer(username);
+                            })
+                        .map(e -> e.getValue())
+                        .collect(Collectors.toList()).get(0);
+                    System.out.println("Starting game");
+                    call(lobby);
+                } catch (RuntimeException | InterruptedException | ExecutionException e) {
+                    System.out.println(" [.] " + e);
+                }
+            };
+            this.chan.basicConsume(RPCEnum.RPC_START_GAME.getValue(), false, deliverCallback, (consumerTag -> {}));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }                
+    }
+
+    private void call(Lobby lobby) throws UnsupportedEncodingException, IOException, InterruptedException, ExecutionException {
+
+        for (var p : lobby.getPlayers()) {
+            String rpc = "rpc-start-game-gui-" + p;
+            String param = lobby.getMapname();
+            final String corrId = UUID.randomUUID().toString();
+            String replyQueueName = chan.queueDeclare().getQueue();
+            AMQP.BasicProperties props = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(corrId)
+                .replyTo(replyQueueName)
+                .build();
+
+            chan.basicPublish("", rpc, props, param.getBytes("UTF-8"));
+        }
     }
 
     public static void main(String[] args) {

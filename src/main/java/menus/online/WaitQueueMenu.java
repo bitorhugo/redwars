@@ -118,8 +118,20 @@ public class WaitQueueMenu implements ActionListener {
         return pls;
     }
 
-    private String call() throws IOException, InterruptedException, ExecutionException {
-        String param = Game.lobbyID;
+    private void call(RPCEnum rpc) throws IOException, InterruptedException, ExecutionException {
+        switch (rpc) {
+            case RPC_GET_PLAYERS:
+                break;
+            case RPC_START_GAME:
+                this.rpcStartGame();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void rpcStartGame() throws IOException, InterruptedException, ExecutionException {
+        String param = Game.u;
             
         final String corrId = UUID.randomUUID().toString();
         String replyQueueName = Game.chan.queueDeclare().getQueue();
@@ -128,22 +140,36 @@ public class WaitQueueMenu implements ActionListener {
             .correlationId(corrId)
             .replyTo(replyQueueName)
             .build();
-
-        Game.chan.basicPublish("", RPCEnum.RPC_SEARCH_LOBBIES.getValue(), props, param.getBytes("UTF-8"));
-
-        final CompletableFuture<String> response = new CompletableFuture<>();
-
-        String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
-                if (delivery.getProperties().getCorrelationId().equals(corrId)) {
-                    response.complete(new String(delivery.getBody(), "UTF-8"));
-                }
-            }, consumerTag -> {
-            });
-
-        String result = response.get();
-        Game.chan.basicCancel(ctag);
-        return result;
+        System.out.println("sending [x]" + param);
+        Game.chan.basicPublish("", RPCEnum.RPC_START_GAME.getValue(), props, param.getBytes("UTF-8"));
     }
+    
+    // private String rpcGetPlayers() throws IOException, InterruptedException, ExecutionException {
+    //     String param = "";
+            
+    //     final String corrId = UUID.randomUUID().toString();
+    //     String replyQueueName = Game.chan.queueDeclare().getQueue();
+    //     AMQP.BasicProperties props = new AMQP.BasicProperties
+    //         .Builder()
+    //         .correlationId(corrId)
+    //         .replyTo(replyQueueName)
+    //         .build();
+
+    //     Game.chan.basicPublish("", RPCEnum.RPC_GET_PLAYERS.getValue(), props, param.getBytes("UTF-8"));
+
+    //     final CompletableFuture<String> response = new CompletableFuture<>();
+
+    //     String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+    //             if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+    //                 response.complete(new String(delivery.getBody(), "UTF-8"));
+    //             }
+    //         }, consumerTag -> {
+    //         });
+
+    //     String result = response.get();
+    //     Game.chan.basicCancel(ctag);
+    //     return result;
+    // }
  
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -157,8 +183,8 @@ public class WaitQueueMenu implements ActionListener {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-        MenuHandler.CloseMenu();
-        Game.gui.MenuScreen();
+            MenuHandler.CloseMenu();
+            Game.gui.MenuScreen();
         }
 
         if (s == this.Refresh) {
@@ -167,19 +193,10 @@ public class WaitQueueMenu implements ActionListener {
 
         if (s == this.Start) {
             try {
-
-                // start to listen for messages coming from lobby exchange
-                Game.chan.queueDeclare("search_lobby", false, false, false, null);
-                String msg = "startGame" + ";" + Game.lobbyID + ";" + Game.u;
-                Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
-            } catch (IOException e1) {
+                this.call(RPCEnum.RPC_START_GAME);
+            } catch (IOException | InterruptedException | ExecutionException e1) {
                 e1.printStackTrace();
             }
-            
-            // try {
-                
-            // } catch (IOException e1){
-            
             // try {
             //     // Start the game
             //     Game.lobby.startGame();

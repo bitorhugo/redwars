@@ -2,19 +2,22 @@ package engine;
 
 import java.awt.Dimension;
 import java.awt.Image;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DeliverCallback;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
 import menus.MenuHandler;
 
 // export Game as UnicastRemoteObject
@@ -78,6 +81,8 @@ public class Game extends JFrame {
     public static Channel chan; 
     public static String u; // username
     public static String lobbyID;
+    public static String rpcStartGameGui = "rpc-start-game-gui-"; // name of the gui rpc
+    public static String rpc; // name of the gui rpc
     
 	public Game(Channel channel) {
         super (name);
@@ -141,24 +146,38 @@ public class Game extends JFrame {
 		GameLoop();
 	}
 
-    public void startGame() {
+    public static void rpcStartGame() {
         try {
-            boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
+            chan.queueDeclare(rpc, false, false, false, null);
+            chan.queuePurge(rpc);
 
-            int[] cmds = new int[4];
-            var obs = Game.lobby.players();
-            for (int i = 0; i < obs.size(); i++) {
-                cmds[i] = obs.get(i).getCommander();
-            }
+            chan.basicQos(1);
 
-            MenuHandler.CloseMenu();
-            Game.btl.NewGame(Game.lobby.getMapname());
-            Game.btl.AddCommanders(cmds, npc, 100, 50);
-            Game.gui.InGameScreen();
-            
-        } catch(RemoteException e){
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                try {
+                    String mapname = new String(delivery.getBody(), "UTF-8");
+                    System.out.println("guy " + mapname);
+                    boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
+
+                    int[] cmds = new int[4];
+                    // var obs = Game.lobby.players();
+                    // for (int i = 0; i < obs.size(); i++) {
+                    //     cmds[i] = obs.get(i).getCommander();
+                    // }
+
+                    MenuHandler.CloseMenu();
+                    Game.btl.NewGame(mapname);
+                    Game.btl.AddCommanders(cmds, npc, 100, 50);
+                    Game.gui.InGameScreen();                    
+             
+                } catch (RuntimeException e) {
+                    System.out.println(" [.] " + e);
+                }
+            };
+            chan.basicConsume(rpc, false, deliverCallback, (consumerTag -> {}));
+        } catch (IOException e) {
             e.printStackTrace();
-        }
+        }                
     }
 
 	private void GameLoop() {
