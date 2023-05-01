@@ -54,6 +54,9 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 
     private void handleOnlineInputRabbit(KeyEvent e) {
         try {
+            
+            Game.chan.queueDeclare(Game.workQueueName, false, false, false, null);
+            
             int key = e.getKeyCode();
 
             if (key == exit) {System.exit(0);}
@@ -64,8 +67,8 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
                 var obs = Game.obs.getId();
                 
                 if (key == up) {
-                    String message = obs + ";up";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    String message = Game.u + ";" + "up";
+                    Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == down) {
                     String message = obs + ";down";

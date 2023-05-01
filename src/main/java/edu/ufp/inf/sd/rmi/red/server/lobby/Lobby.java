@@ -5,12 +5,12 @@ import java.rmi.RemoteException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 
@@ -18,33 +18,31 @@ import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby implements SubjectRI {
-    
+
     private String id;
     private String mapname;
     private List<String> players = new ArrayList<>();
-    
+
     @JsonIgnore
     private transient TokenRing ring;
-    
+
     @JsonIgnore
     private transient Channel chan;
-    
+
     // client -> server
     @JsonIgnore
     private transient String WQ_QUEUE_NAME;
-    
+
     // server -> client channel
     @JsonIgnore
-    private transient String FANOUT_EXCHANGE_NAME;
+    private transient String FANOUT_EXCHANGE_NAME = UUID.randomUUID().toString();
 
     @JsonIgnore
     private transient List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
 
-
     public Lobby(Channel chan, String mapname, int lobbyID) {
         this(mapname, lobbyID);
         this.chan = chan;
-        this.WQ_QUEUE_NAME = this.id.toString();
     }
 
     public Lobby(String mapname, int lobbyID) {
@@ -118,44 +116,55 @@ public class Lobby implements SubjectRI {
     @Override
     public void startGame() throws RemoteNotEnoughPlayersException {
         if (this.check_requirements()) {
-            
             // initialize token ring
             this.ring = new TokenRing(Clock.systemUTC(), this.observers.size());
-
-            this.FANOUT_EXCHANGE_NAME = this.id.toString();
+            this.declareFanoutExchange();
             this.notifyStartGame();
         }
     }
 
+    private void declareFanoutExchange() {
+         try {
+            this.chan.exchangeDeclare(FANOUT_EXCHANGE_NAME, "fanout");
+        } catch (IOException e) {
+            System.err.println("Not able to open channel for RabbitMQ");
+        }
+        System.out.println("INFO: Fanout Exchange declared ");
+    }
 
     private void notifyStartGame() {
-        
-        // // iterate over obs list and tell them to start the game
-        // this.observers.forEach(o -> {
-        //         try {
-        //             System.out.println("INFO: Staring game for: " + o);
-        //             o.startGame(this.FANOUT_EXCHANGE_NAME);
-        //         } catch (RemoteException e) {
-        //             e.printStackTrace();
-        //         }
-        //     });
-        
-        // start listening for state changes from clients
-        // this.listenStateChanges();
+        this.players.forEach(p -> {
+            try {
+                String rpc = "rpc-start-game-gui-" + p;
+                String param = this.mapname + ";" + this.FANOUT_EXCHANGE_NAME;
+                final String corrId = UUID.randomUUID().toString();
+                String replyQueueName = chan.queueDeclare().getQueue();
+                AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                        .correlationId(corrId)
+                        .replyTo(replyQueueName)
+                        .build();
+                chan.basicPublish("", rpc, props, param.getBytes("UTF-8"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        this.listenStateChanges();
     }
 
     private void listenStateChanges() {
         try {
+            //TODO: make a rpc call to ask for WQ name
             this.chan.queueDeclare(this.WQ_QUEUE_NAME, false, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-            
+
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 // String is composed of {observer_index;command}
-                String []message = new String(delivery.getBody(), "UTF-8").split(";");
+                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
 
                 int obs = Integer.parseInt(message[0]);
                 String msg = message[1];
-                
+
                 System.out.println(" [x] Received 'obs=" + obs + "' msg=" + msg + "'");
 
                 if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
@@ -167,7 +176,8 @@ public class Lobby implements SubjectRI {
                     }
                 }
             };
-            this.chan.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+            this.chan.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> {
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -176,13 +186,16 @@ public class Lobby implements SubjectRI {
     private boolean check_requirements() throws RemoteNotEnoughPlayersException {
         int playerCount = this.playerCount();
         switch (this.mapname) {
-        case "FourCorners":
-            if (playerCount == 4) {
-                return true;}
-            break;
-        case "SmallVs":
-            if (playerCount == 2) {return true;}
-            break;
+            case "FourCorners":
+                if (playerCount == 4) {
+                    return true;
+                }
+                break;
+            case "SmallVs":
+                if (playerCount == 2) {
+                    return true;
+                }
+                break;
         }
         throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
@@ -200,5 +213,5 @@ public class Lobby implements SubjectRI {
     public String toString() {
         return "{" + this.id + "," + this.playerCount() + "}";
     }
-    
+
 }

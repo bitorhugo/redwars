@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.swing.JFrame;
 
@@ -81,6 +82,8 @@ public class Game extends JFrame {
     public static Channel chan; 
     public static String u; // username
     public static String lobbyID;
+    public static String fanoutExchange;
+    public static String workQueueName;
     public static String rpcStartGameGui = "rpc-start-game-gui-"; // name of the gui rpc
     public static String rpc; // name of the gui rpc
     
@@ -155,16 +158,18 @@ public class Game extends JFrame {
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 try {
-                    String mapname = new String(delivery.getBody(), "UTF-8");
-                    System.out.println("guy " + mapname);
+                    String []args = new String(delivery.getBody(), "UTF-8").split(";");
+                    System.out.println("Received [x] " + args);
+
+                    String mapname = args[0];
+                    Game.fanoutExchange = args[1];
+                    Game.workQueueName = UUID.randomUUID().toString();
                     boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
 
                     int[] cmds = new int[4];
-                    // var obs = Game.lobby.players();
-                    // for (int i = 0; i < obs.size(); i++) {
-                    //     cmds[i] = obs.get(i).getCommander();
-                    // }
 
+                    Game.listenToChangesFromServer();
+                    
                     MenuHandler.CloseMenu();
                     Game.btl.NewGame(mapname);
                     Game.btl.AddCommanders(cmds, npc, 100, 50);
@@ -178,6 +183,23 @@ public class Game extends JFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }                
+    }
+
+
+    private static void listenToChangesFromServer() {
+        try {
+            Game.chan.exchangeDeclare(Game.fanoutExchange, "fanout");
+            String queueName = chan.queueDeclare().getQueue();
+            chan.queueBind(queueName, Game.fanoutExchange, "");
+
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+            };
+            chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+        } catch (IOException e) {}
     }
 
 	private void GameLoop() {

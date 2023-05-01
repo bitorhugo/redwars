@@ -349,8 +349,8 @@ public class RedServer {
                         .map(e -> e.getValue())
                         .collect(Collectors.toList()).get(0);
                     System.out.println("Starting game");
-                    call(lobby);
-                } catch (RuntimeException | InterruptedException | ExecutionException e) {
+                    lobby.startGame(); // start game for all clients
+                } catch (RuntimeException e) {
                     System.out.println(" [.] " + e);
                 }
             };
@@ -360,23 +360,7 @@ public class RedServer {
         }                
     }
 
-    private void call(Lobby lobby) throws UnsupportedEncodingException, IOException, InterruptedException, ExecutionException {
-
-        for (var p : lobby.getPlayers()) {
-            String rpc = "rpc-start-game-gui-" + p;
-            String param = lobby.getMapname();
-            final String corrId = UUID.randomUUID().toString();
-            String replyQueueName = chan.queueDeclare().getQueue();
-            AMQP.BasicProperties props = new AMQP.BasicProperties
-                .Builder()
-                .correlationId(corrId)
-                .replyTo(replyQueueName)
-                .build();
-
-            chan.basicPublish("", rpc, props, param.getBytes("UTF-8"));
-        }
-    }
-
+    
     public static void main(String[] args) {
         if (args != null && args.length < 3) {
             System.err.println("usage: java [options] <rmi_registry_ip> <rmi_registry_port> <service_name>");
