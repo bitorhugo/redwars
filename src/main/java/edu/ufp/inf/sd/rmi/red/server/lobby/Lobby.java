@@ -88,6 +88,10 @@ public class Lobby implements SubjectRI {
         this.players.remove(username);
     }
 
+    public boolean containsPlayer(String username) {
+        return this.players.contains(username);
+    }
+
     public int playerCount() {
         return this.players.size();
     }

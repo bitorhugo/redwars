@@ -128,7 +128,7 @@ public class GameSelection implements ActionListener {
 
     private String call() throws IOException, InterruptedException, ExecutionException {
 
-            String function = mapname;
+            String param = mapname;
             
             final String corrId = UUID.randomUUID().toString();
             String replyQueueName = Game.chan.queueDeclare().getQueue();
@@ -138,7 +138,7 @@ public class GameSelection implements ActionListener {
                 .replyTo(replyQueueName)
                 .build();
 
-            Game.chan.basicPublish("", RPCEnum.RPC_SEARCH_LOBBIES.getValue(), props, function.getBytes("UTF-8"));
+            Game.chan.basicPublish("", RPCEnum.RPC_SEARCH_LOBBIES.getValue(), props, param.getBytes("UTF-8"));
 
             final CompletableFuture<String> response = new CompletableFuture<>();
 
@@ -171,6 +171,8 @@ public class GameSelection implements ActionListener {
             String msg = "join" + ";" + id  + ";" + Game.u;
             Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
             System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+
+            new WaitQueueMenu();
             } catch (Exception e1) {
             }
         }

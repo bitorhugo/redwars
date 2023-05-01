@@ -122,7 +122,10 @@ public class RedServer {
 
             this.chan.basicConsume(queueName, true, deliverFanoutCallback, consumerTag -> { });
 
+            // listen for rpc calls
             this.searchLobbiesRPC();
+            this.getPlayersRPC();
+            
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -179,6 +182,7 @@ public class RedServer {
                 l = this.lobbies.get(lobbyID);
                 l.addPlayer(username);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined lobby {1}", new Object[]{username, lobbyID});
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Players inside lobby {0}: {1} ", new Object[]{lobbyID, l.getPlayers()});
                 break;
 
             case "getPlayers":
@@ -193,30 +197,25 @@ public class RedServer {
                 this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
                 break;
-
-            case "startGame":
-                // lobbyID = message[1];
-                // username = message[2];
-                // response = "startGame;";
-                // for (var pls : this.lobbies.get(lobbyID).getPlayers()) {
-                //     // this.chan.queueDeclare(username, false, false, false, null);
-                //     // this.chan.basicPublish("", pls, null, response.getBytes("UTF-8"));
-                //     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent to player {1}", new Object[]{response, pls});
-                // }
-                // Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Game from lobby {0} starting.", lobbyID);
-                break;
                 
             case "delete":
-                lobbyID = message[1];
-                username = message[2];
-                l = this.lobbies.get(lobbyID);
+                username = message[1];
+                String u = username;
+                var lobbies = this.lobbies.entrySet().stream()
+                    .filter(set -> {
+                            return set.getValue().containsPlayer(u);
+                        })
+                    .map(e -> e.getValue())
+                    .collect(Collectors.toList());
+                l = lobbies.get(0);
+                System.out.println(l);
                 if (l.getPlayers().size() == 1) {
-                    this.lobbies.remove(lobbyID);
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", lobbyID);
+                    this.lobbies.remove(l.getID());
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", l.getID());
                 }
                 else {
                     l.removePlayer(username);
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed from Lobby {1}", new Object[]{username, lobbyID});
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed from Lobby {1}", new Object[]{username, l.getID()});
                 }
                 break;
             }
@@ -243,8 +242,8 @@ public class RedServer {
                     String mapname = new String(delivery.getBody(), "UTF-8");
                     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for {0} lobbies", mapname);
                     var lobbies = this.lobbies.entrySet().stream()
-                        .filter(lobby -> {
-                                return lobby.getValue().getMapname().compareTo(mapname) == 0;
+                        .filter(set -> {
+                                return set.getValue().getMapname().compareTo(mapname) == 0;
                             })
                         .map(e -> e.getValue())
                         .collect(Collectors.toList());
@@ -292,6 +291,35 @@ public class RedServer {
                 }
             };
             this.chan.basicConsume(RPCEnum.RPC_LOGIN.getValue(), false, deliverCallback, (consumerTag -> {}));
+        } catch (Exception e) {}        
+    }
+
+    private void getPlayersRPC() {
+        try {
+            this.chan.queueDeclare(RPCEnum.RPC_GET_PLAYERS.getValue(), false, false, false, null);
+            this.chan.queuePurge(RPCEnum.RPC_GET_PLAYERS.getValue());
+
+            this.chan.basicQos(1);
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(delivery.getProperties().getCorrelationId())
+                .build();
+
+                String response = "";
+                try {
+                    String x = new String(delivery.getBody(), "UTF-8");
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for {0} lobbies");
+
+                } catch (RuntimeException e) {
+                    System.out.println(" [.] " + e);
+                } finally {
+                    this.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                    this.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                }
+            };
+            this.chan.basicConsume(RPCEnum.RPC_GET_PLAYERS.getValue(), false, deliverCallback, (consumerTag -> {}));
         } catch (Exception e) {}        
     }
 
