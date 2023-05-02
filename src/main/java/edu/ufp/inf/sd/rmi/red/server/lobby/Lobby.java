@@ -1,82 +1,67 @@
 package edu.ufp.inf.sd.rmi.red.server.lobby;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.ExecutionException;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 
-import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
-public class Lobby implements SubjectRI {
+public class Lobby {
 
     private String id;
     private String mapname;
     private List<String> players = new ArrayList<>();
 
-    @JsonIgnore
     private transient TokenRing ring;
-
-    @JsonIgnore
     private transient Channel chan;
-
-    // client -> server
-    @JsonIgnore
-    private transient String WQ_QUEUE_NAME;
-
-    // server -> client channel
-    @JsonIgnore
+    private transient String WQ_QUEUE_NAME = UUID.randomUUID().toString();
     private transient String FANOUT_EXCHANGE_NAME = UUID.randomUUID().toString();
 
-    @JsonIgnore
-    private transient List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
-
-    public Lobby(Channel chan, String mapname, int lobbyID) {
-        this(mapname, lobbyID);
-        this.chan = chan;
-    }
-
+    
     public Lobby(String mapname, int lobbyID) {
         super();
         this.id = String.valueOf(lobbyID);
         this.mapname = mapname;
     }
 
-    public Channel getChannel() {
-        return this.chan;
+    public Lobby(Channel chan, String mapname, int lobbyID) {
+        this(mapname, lobbyID);
+        this.chan = chan;
+    }
+
+    public String getID() {
+        return this.id;
+    }
+    
+    public String getMapname() {
+        return this.mapname;
+    }
+
+    public List<String> getPlayers() {
+        return this.players;
     }
 
     public TokenRing getRing() {
         return this.ring;
     }
+    
+    public Channel getChannel() {
+        return this.chan;
+    }
 
-    @Override
-    public String getQeueuName() throws RemoteException {
+    public String getWorkQueueName() {
         return this.WQ_QUEUE_NAME;
     }
 
-    @Override
-    public String getMapname() {
-        return this.mapname;
-    }
-
-    @Override
-    public String getID() {
-        return this.id;
-    }
-
-    @Override
-    public List<ObserverRI> players() throws RemoteException {
-        return this.observers;
+    public void setWorkQueueName(String workQueueName) {
+        this.WQ_QUEUE_NAME = workQueueName;
     }
 
     public void addPlayer(String username) {
@@ -95,92 +80,42 @@ public class Lobby implements SubjectRI {
         return this.players.size();
     }
 
-    public List<String> getPlayers() {
-        return this.players;
-    }
 
-    @Override
-    public void attach(ObserverRI obs) throws RemoteException {
-        this.observers.add(obs);
-        System.out.println("INFO: " + obs + " added");
-        System.out.println("INFO: Player Count: " + this.playerCount());
-    }
-
-    @Override
-    public void detach(ObserverRI obs) throws RemoteException {
-        this.observers.remove(obs);
-        System.out.println("INFO: " + obs + " removed");
-        System.out.println("INFO: Player Count: " + this.playerCount());
-    }
-
-    @Override
-    public void startGame() throws RemoteNotEnoughPlayersException {
+    public void startGame() throws IOException, InterruptedException, ExecutionException {
         if (this.check_requirements()) {
-            // initialize token ring
-            this.ring = new TokenRing(Clock.systemUTC(), this.observers.size());
+            System.out.println("inside startGame sdsadasda");
+
+            this.ring = new TokenRing(Clock.systemUTC(), this.players.size());
+            
+            // declare work queue that server will consume from
+            this.declareWorkQueue();
+
+            // declare Fanout Exchange
             this.declareFanoutExchange();
+
+            // notify players to start their game gui
             this.notifyStartGame();
         }
-    }
-
-    private void declareFanoutExchange() {
-         try {
-            this.chan.exchangeDeclare(FANOUT_EXCHANGE_NAME, "fanout");
-        } catch (IOException e) {
-            System.err.println("Not able to open channel for RabbitMQ");
-        }
-        System.out.println("INFO: Fanout Exchange declared ");
     }
 
     private void notifyStartGame() {
         this.players.forEach(p -> {
             try {
-                String rpc = "rpc-start-game-gui-" + p;
-                String param = this.mapname + ";" + this.FANOUT_EXCHANGE_NAME;
+                // get each clients rpc
+                String uniqueRPC = "rpc-start-game-gui-" + p;
+                
+                // send as params: mapname, list of each players commanders, work-queue name, fanout name
+                String params = this.mapname + ";" + this.WQ_QUEUE_NAME + ";" + this.FANOUT_EXCHANGE_NAME;
+                
                 final String corrId = UUID.randomUUID().toString();
                 String replyQueueName = chan.queueDeclare().getQueue();
                 AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                         .correlationId(corrId)
                         .replyTo(replyQueueName)
                         .build();
-                chan.basicPublish("", rpc, props, param.getBytes("UTF-8"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                chan.basicPublish("", uniqueRPC, props, params.getBytes("UTF-8"));
+            } catch (IOException e) {e.printStackTrace();}
         });
-
-        this.listenStateChanges();
-    }
-
-    private void listenStateChanges() {
-        try {
-            //TODO: make a rpc call to ask for WQ name
-            this.chan.queueDeclare(this.WQ_QUEUE_NAME, false, false, false, null);
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                // String is composed of {observer_index;command}
-                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
-
-                int obs = Integer.parseInt(message[0]);
-                String msg = message[1];
-
-                System.out.println(" [x] Received 'obs=" + obs + "' msg=" + msg + "'");
-
-                if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
-                    // send command to all clients
-                    this.chan.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
-
-                    if (msg.compareTo("endturn") == 0) {
-                        this.ring.passToken();
-                    }
-                }
-            };
-            this.chan.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> {
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private boolean check_requirements() throws RemoteNotEnoughPlayersException {
@@ -200,13 +135,42 @@ public class Lobby implements SubjectRI {
         throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
 
-    public void closeChannel(Channel chan) {
+    private void declareWorkQueue() {
         try {
-            chan.close();
-            System.out.println("INFO: Channel closed " + chan);
-        } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
+            System.out.println("Waiting for messages");
+            this.chan.queueDeclare(WQ_QUEUE_NAME, false, false, false, null);
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String[] message = new String(delivery.getBody(), "UTF-8").split(";");
+
+                String player = message[0];
+                String command = message[1];
+
+                System.out.println(" [x] Received 'player=" + player + "' command=" + command + "'");
+
+                // if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
+                //     // send command to all clients
+                //     this.chan.basicPublish(FANOUT_EXCHANGE_NAME, "", null, command.getBytes("UTF-8"));
+
+                //     if (command.compareTo("endturn") == 0) {
+                //         this.ring.passToken();
+                //     }
+                // }
+            };
+            this.chan.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> {
+            });
+        } catch (IOException e) {
+            System.err.println("Not able to declare Work-Queue " + this.WQ_QUEUE_NAME);
         }
+        System.out.println("INFO: Work-Queue " + this.WQ_QUEUE_NAME + " declared");
+    }
+
+    private void declareFanoutExchange() {
+         try {
+            this.chan.exchangeDeclare(FANOUT_EXCHANGE_NAME, "fanout");
+        } catch (IOException e) {
+            System.err.println("Not able to open channel for RabbitMQ");
+        }
+        System.out.println("INFO: Fanout Exchange declared ");
     }
 
     @Override

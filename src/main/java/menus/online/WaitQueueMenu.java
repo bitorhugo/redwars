@@ -41,6 +41,7 @@ public class WaitQueueMenu implements ActionListener {
         this.addGui();
         this.addActionListeners();
         this.playerList(size);
+        Game.isOnline = true;
     }
 
     private void SetBounds(Point size) {
@@ -185,6 +186,7 @@ public class WaitQueueMenu implements ActionListener {
             }
             MenuHandler.CloseMenu();
             Game.gui.MenuScreen();
+            Game.isOnline = false;
         }
 
         if (s == this.Refresh) {
@@ -197,13 +199,6 @@ public class WaitQueueMenu implements ActionListener {
             } catch (IOException | InterruptedException | ExecutionException e1) {
                 e1.printStackTrace();
             }
-            // try {
-            //     // Start the game
-            //     Game.lobby.startGame();
-            // } catch (RemoteException e1) {
-            //     String error = e1.getCause().toString();
-            //     Game.error.ShowError(error);
-            // }
         }
         
     }

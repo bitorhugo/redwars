@@ -4,18 +4,13 @@ import edu.ufp.inf.sd.rmi.red.model.db.VolatileDB;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserAlreadyRegisteredException;
 import edu.ufp.inf.sd.rmi.red.model.user.RemoteUserNotFoundException;
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
-import edu.ufp.inf.sd.rmi.red.server.lobby.RemoteNotEnoughPlayersException;
 import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -350,7 +345,7 @@ public class RedServer {
                         .collect(Collectors.toList()).get(0);
                     System.out.println("Starting game");
                     lobby.startGame(); // start game for all clients
-                } catch (RuntimeException e) {
+                } catch (RuntimeException | InterruptedException | ExecutionException e) {
                     System.out.println(" [.] " + e);
                 }
             };

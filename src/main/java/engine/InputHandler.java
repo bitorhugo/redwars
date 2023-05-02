@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.UUID;
 
 /**
  * Keyboard handling for the game along with the mouse setup for game handling.
@@ -54,42 +55,37 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 
     private void handleOnlineInputRabbit(KeyEvent e) {
         try {
-            
-            Game.chan.queueDeclare(Game.workQueueName, false, false, false, null);
-            
             int key = e.getKeyCode();
 
             if (key == exit) {System.exit(0);}
 
             if (Game.GameState == Game.State.PLAYING) {
                 players.Base ply = Game.player.get(Game.btl.currentplayer);
-
-                var obs = Game.obs.getId();
                 
                 if (key == up) {
                     String message = Game.u + ";" + "up";
                     Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
                     System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == down) {
-                    String message = obs + ";down";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
-                    System.out.println(" [x] Sent '" + message + "'");
+                    // String message = obs + ";down";
+                    // Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    // System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == left) {
-                    String message = obs + ";left";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
-                    System.out.println(" [x] Sent '" + message + "'");
+                    // String message = obs + ";left";
+                    // Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    // System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == right) {
-                    String message = obs + ";right";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
-                    System.out.println(" [x] Sent '" + message + "'");
+                    // String message = obs + ";right";
+                    // Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    // System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == select) {
-                    String message = obs + ";select";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
-                    System.out.println(" [x] Sent '" + message + "'");
+                    // String message = obs + ";select";
+                    // Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    // System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == cancel) {
-                    String message = obs + ";cancel";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
-                    System.out.println(" [x] Sent '" + message + "'");
+                    // String message = obs + ";cancel";
+                    // Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
+                    // System.out.println(" [x] Sent '" + message + "'");
                 } else if (key == start) {
                     new menus.Pause();
                 }

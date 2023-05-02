@@ -3,7 +3,6 @@ package engine;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -82,8 +81,9 @@ public class Game extends JFrame {
     public static Channel chan; 
     public static String u; // username
     public static String lobbyID;
-    public static String fanoutExchange;
-    public static String workQueueName;
+    public static String fanoutExchangeName;
+
+    public static String workQueueName = UUID.randomUUID().toString();
     public static String rpcStartGameGui = "rpc-start-game-gui-"; // name of the gui rpc
     public static String rpc; // name of the gui rpc
     
@@ -97,53 +97,20 @@ public class Game extends JFrame {
 		setResizable(false);
 	    setLocationRelativeTo(null);
 
-        // save stub for future reference
         chan = channel;
-        // save this game instance
         g = this;
 
-		//Creates all the gui elements and sets them up
         gui = new Gui(this);
 		add(gui);
 		gui.setFocusable(true);
 		gui.requestFocusInWindow();
 		
-		//load images, initialize the map, and adds the input settings.
 		load = new LoadImages();
 		map = new Map();
 		input = new InputHandler();
 		list = new ListData();
 		
-		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
-		gui.LoginScreen();
-        save.LoadSettings();
-		GameLoop();
-	}
-
-    public Game() {
-        super (name);
-		//Default Settings of the JFrame
-	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    setSize(new Dimension(20*ScreenBase+6,12*ScreenBase+12));
-		setBounds(0,0,20*ScreenBase+6,12*ScreenBase+12);
-	    setUndecorated(false);
-		setResizable(false);
-	    setLocationRelativeTo(null);
-
-		//Creates all the gui elements and sets them up
-		// gui = new Gui(this);
-        gui = new Gui(this);
-		add(gui);
-		gui.setFocusable(true);
-		gui.requestFocusInWindow();
-		
-		//load images, initialize the map, and adds the input settings.
-		load = new LoadImages();
-		map = new Map();
-		input = new InputHandler();
-		list = new ListData();
-		
-		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
+		setVisible(true);
 		gui.LoginScreen();
         save.LoadSettings();
 		GameLoop();
@@ -159,16 +126,21 @@ public class Game extends JFrame {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 try {
                     String []args = new String(delivery.getBody(), "UTF-8").split(";");
-                    System.out.println("Received [x] " + args);
+                    System.out.println("Received [x] " + args[1]);
 
                     String mapname = args[0];
-                    Game.fanoutExchange = args[1];
-                    Game.workQueueName = UUID.randomUUID().toString();
+                    // cmds will be picked here from args[1]
+                    Game.workQueueName = args[1];
+                    Game.fanoutExchangeName = args[2];
+
                     boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
 
                     int[] cmds = new int[4];
 
-                    Game.listenToChangesFromServer();
+                    // start listening to server incoming messages
+                    // Once a player makes a move, the command will
+                    // be sent to the server to get consumed
+                    Game.consumeFromServer();
                     
                     MenuHandler.CloseMenu();
                     Game.btl.NewGame(mapname);
@@ -186,11 +158,11 @@ public class Game extends JFrame {
     }
 
 
-    private static void listenToChangesFromServer() {
+    private static void consumeFromServer() {
         try {
-            Game.chan.exchangeDeclare(Game.fanoutExchange, "fanout");
+            Game.chan.exchangeDeclare(Game.fanoutExchangeName, "fanout");
             String queueName = chan.queueDeclare().getQueue();
-            chan.queueBind(queueName, Game.fanoutExchange, "");
+            chan.queueBind(queueName, Game.fanoutExchangeName, "");
 
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
@@ -252,8 +224,4 @@ public class Game extends JFrame {
 		}
 	}
 	
-	/**Starts a new game when launched.*/
-	public static void main(String args[]) throws Exception {
-        new Game();
-    }
 }
