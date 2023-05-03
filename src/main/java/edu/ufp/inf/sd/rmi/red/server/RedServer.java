@@ -157,73 +157,70 @@ public class RedServer {
     }
 
     private void handleLobbies(String[] message) {
-        try {
-            String action = message[0];
-            String username = null;
-            String mapname = null;
-            String cmd = null;
-            String lobbyID = null;
+        String action = message[0];
+        String username = null;
+        String mapname = null;
+        String cmd = null;
+        String lobbyID = null;
 
-            Lobby l = null;
-            String response = null;
+        Lobby l = null;
+        
+        switch (action) {
+
+        case "new": // message = new;username;mapname
+            username = message[1];
+            mapname = message[2];
+            cmd = message[3];
+            l = new Lobby(this.chan, mapname, this.lobbies.size());
+            l.addPlayer(username);
+            this.lobbies.put(l.getID(), l);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
+            break;
             
-            switch (action) {
+        case "join":
+            lobbyID = message[1];
+            username = message[2];
+            l = this.lobbies.get(lobbyID);
+            l.addPlayer(username);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined lobby {1}", new Object[]{username, lobbyID});
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Players inside lobby {0}: {1} ", new Object[]{lobbyID, l.getPlayers()});
+            break;
 
-            case "new": // message = new;username;mapname
-                username = message[1];
-                mapname = message[2];
-                cmd = message[3];
-                l = new Lobby(this.chan, mapname, this.lobbies.size());
-                l.addPlayer(username);
-                this.lobbies.put(l.getID(), l);
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "LOBBY {0} created", l.getID());
-                break;
-                
-            case "join":
-                lobbyID = message[1];
-                username = message[2];
-                l = this.lobbies.get(lobbyID);
-                l.addPlayer(username);
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} joined lobby {1}", new Object[]{username, lobbyID});
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Players inside lobby {0}: {1} ", new Object[]{lobbyID, l.getPlayers()});
-                break;
-
-            case "getPlayers":
-                lobbyID = message[1];
-                username = message[2];
-                
-                // this.chan.queueDeclare(username, false, false, false, null);
-                response = "ok";
-                for (var p : this.lobbies.get(lobbyID).getPlayers()) {
-                    response += ";" + p;                    
-                }
-                this.chan.basicPublish("", username, null, response.getBytes("UTF-8"));
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Message {0} sent", response);
-                break;
-                
-            case "delete":
-                username = message[1];
-                String u = username;
-                var lobbies = this.lobbies.entrySet().stream()
-                    .filter(set -> {
-                            return set.getValue().containsPlayer(u);
-                        })
-                    .map(e -> e.getValue())
-                    .collect(Collectors.toList());
-                l = lobbies.get(0);
-                System.out.println(l);
-                if (l.getPlayers().size() == 1) {
-                    this.lobbies.remove(l.getID());
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", l.getID());
-                }
-                else {
-                    l.removePlayer(username);
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed from Lobby {1}", new Object[]{username, l.getID()});
-                }
-                break;
+        case "removePlayer":
+            username = message[1];
+            String tmp = username;
+            var lobbies1 = this.lobbies.entrySet().stream()
+                .filter(set -> {
+                        return set.getValue().containsPlayer(tmp);
+                    })
+                .map(e -> e.getValue())
+                .collect(Collectors.toList());
+            l = lobbies1.get(0);
+            if (l.playerCount() == 1) {
+                var params = new String[] { "delete", username };
+                this.handleLobbies(params);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            else {
+                l.removePlayer(username);
+            }
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed",
+                    username);
+            break;
+            
+        case "delete":
+            System.out.println("delete");
+            username = message[1];
+            String u = username;
+            var lobbies = this.lobbies.entrySet().stream()
+                .filter(set -> {
+                        return set.getValue().containsPlayer(u);
+                    })
+                .map(e -> e.getValue())
+                .collect(Collectors.toList());
+            l = lobbies.get(0);
+            this.lobbies.remove(l.getID());
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", l.getID());
+            break;
         }
     }
 

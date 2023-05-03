@@ -3,11 +3,13 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.rmi.RemoteException;
 
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 
+import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
 import engine.Game;
 
 /**
@@ -67,11 +69,10 @@ public class EndBattle implements ActionListener {
 			Game.gui.MenuScreen();
             Game.isOnline = false;
             try {
-                Game.obs.closeConnection();
-                Game.lobby.detach(Game.obs);
-                Game.session.deleteLobby(Game.lobby.getID());
-            } catch (RemoteException e1) {
-                System.err.println("Failed to detach at End of Game");
+                Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+                String msg = "removePlayer" + ";" + Game.u;
+                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+            } catch (IOException e1) {
                 e1.printStackTrace();
             }
 		}

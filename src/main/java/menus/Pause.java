@@ -3,9 +3,11 @@ package menus;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.rmi.RemoteException;
+import java.io.IOException;
 
 import javax.swing.JButton;
+
+import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
 import engine.Game;
 
 /**
@@ -53,27 +55,31 @@ public class Pause implements ActionListener {
 	@Override public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (s==Quit) {
-			MenuHandler.CloseMenu();
-			Game.gui.MenuScreen();
-            Game.isOnline = false;
-            try {
-                Game.obs.closeConnection();
-                Game.lobby.detach(Game.obs);
-                if (Game.lobby.players().size() == 0) {
-                    Game.session.deleteLobby(Game.lobby.getID());
+            if (Game.isOnline) {
+                MenuHandler.CloseMenu();
+                Game.gui.MenuScreen();
+                Game.isOnline = false;
+                try {
+                    Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+                    String msg = "removePlayer" + ";" + Game.u;
+                    Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
                 }
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
             }
+            else {
+                MenuHandler.CloseMenu();
+                Game.gui.MenuScreen();
+            }
+			
 		}
 		else if (s==EndTurn) {
             if (Game.isOnline) {
                 try {
-                    String message = Game.obs.getId() + ";endturn";
-                    Game.obs.getChannel().basicPublish("", Game.obs.getQeueuName(), null, message.getBytes());
-                    System.out.println(" [x] Sent '" + message + "'");
-                } catch (Exception e1) {
-                    System.out.println(e1.getMessage());
+                    String message = Game.u + ";" + "endturn";
+                    Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
                 }
             }
             else {

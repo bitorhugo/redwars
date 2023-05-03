@@ -179,7 +179,7 @@ public class WaitQueueMenu implements ActionListener {
         if (s == this.Return) {
             try {
                 Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
-                String msg = "delete" + ";" + Game.u;
+                String msg = "removePlayer" + ";" + Game.u;
                 Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
             } catch (IOException e1) {
                 e1.printStackTrace();

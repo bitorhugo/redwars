@@ -164,14 +164,64 @@ public class Game extends JFrame {
             String queueName = chan.queueDeclare().getQueue();
             chan.queueBind(queueName, Game.fanoutExchangeName, "");
 
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
+                handleState(message);
             };
             chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
         } catch (IOException e) {}
+    }
+
+    private static void handleState(String state) {
+        if (Game.GameState == Game.State.PLAYING) {
+            var ply = Game.player.get(Game.btl.currentplayer);
+            switch (state) {
+            case "up":
+                ply.selecty--;
+                if (ply.selecty < 0) {
+                    ply.selecty++;
+                }
+                break;
+            case "down":
+                ply.selecty++;
+                if (ply.selecty >= Game.map.height) {
+                    ply.selecty--;
+                }
+                break;
+            case "left":
+                ply.selectx--;
+                if (ply.selectx < 0) {
+                    ply.selectx++;
+                }
+                break;
+            case "right":
+                ply.selectx++;
+                if (ply.selectx >= Game.map.width) {
+                    ply.selectx--;
+                }
+                break;
+            case "select":
+                Game.btl.Action();
+                break;
+            case "cancel":
+                Game.player.get(Game.btl.currentplayer).Cancle();
+                break;
+            case "start":
+                new menus.Pause();
+                break;
+            case "endturn":
+                MenuHandler.CloseMenu();
+                Game.btl.EndTurn();
+                break;
+            default:
+                String[] params = state.split(":");
+                Game.btl.Buyunit(Integer.parseInt(params[1]),
+                                 Integer.parseInt(params[2]),
+                                 Integer.parseInt(params[3]));
+                MenuHandler.CloseMenu();
+            }
+        }        
     }
 
 	private void GameLoop() {

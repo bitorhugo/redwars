@@ -147,14 +147,12 @@ public class Lobby {
 
                 System.out.println(" [x] Received 'player=" + player + "' command=" + command + "'");
 
-                // if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
-                //     // send command to all clients
-                //     this.chan.basicPublish(FANOUT_EXCHANGE_NAME, "", null, command.getBytes("UTF-8"));
-
-                //     if (command.compareTo("endturn") == 0) {
-                //         this.ring.passToken();
-                //     }
-                // }
+                if (this.ring.getTokenHolder() == this.players.indexOf(player)) { // check to see if message comes from token holder
+                    this.chan.basicPublish(FANOUT_EXCHANGE_NAME, "", null, command.getBytes("UTF-8"));
+                    if (command.compareTo("endturn") == 0) {
+                        this.ring.passToken();
+                    }
+                }
             };
             this.chan.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> {
             });
