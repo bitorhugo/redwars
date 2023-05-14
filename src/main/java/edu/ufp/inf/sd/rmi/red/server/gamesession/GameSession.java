@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
 
 import edu.ufp.inf.sd.rmi.red.server.lobby.Lobby;
 import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
@@ -16,14 +16,14 @@ import edu.ufp.inf.sd.rmi.red.model.user.User;
 
 public class GameSession extends UnicastRemoteObject implements GameSessionRI {
 
-    private Connection conn;
+    private Channel chan;
     private User owner;
     private Map<UUID, Lobby> lobbies;
 
-    public GameSession(Connection conn, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
+    public GameSession(Channel chan, User owner, Map<UUID, Lobby> lobbies) throws RemoteException {
         super();
         owner.verifyToken();
-        this.conn = conn;
+        this.chan = chan;
         this.owner = owner;
         this.lobbies = lobbies;
     }
@@ -38,7 +38,7 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     @Override
     public SubjectRI createLobby(String mapname) throws RemoteException {
         this.verifyToken();
-        Lobby l = new Lobby(this.conn, mapname,
+        Lobby l = new Lobby(this.chan, mapname,
                             this.owner.getUsername());
         System.out.println(this.owner.getUsername() + " created lobby:" + l);
         this.lobbies.put(l.getID(), l);
@@ -49,11 +49,6 @@ public class GameSession extends UnicastRemoteObject implements GameSessionRI {
     public void deleteLobby(UUID id) throws RemoteException {
         this.verifyToken();
         if(this.lobbies.containsKey(id)) {
-            if (this.lobbies.get(id).getPublishChannel() != null) {
-                this.lobbies.get(id).closeChannel(this.lobbies.get(id).getPublishChannel());
-            }
-            this.lobbies.get(id).closeChannel(this.lobbies.get(id).getConsumeChannel());
-            // this.lobbies.get(id).closeConnection(this.lobbies.get(id).getConnection());
             this.lobbies.remove(id);
             System.out.println("INFO: Lobby " + id + " deleted");
         }

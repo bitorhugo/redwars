@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
 
 import edu.ufp.inf.sd.rmi.red.model.db.DB;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSession;
@@ -22,7 +22,7 @@ import edu.ufp.inf.sd.rmi.red.model.user.User;
 public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryRI {
 
     private DB db;
-    private Connection conn;
+    private Channel chan;
     private Map<UUID, Lobby> lobbies = Collections.synchronizedMap(new HashMap<>());
 
 
@@ -35,16 +35,16 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
         this.db = db;
     }
 
-    public GameFactoryImpl(Connection conn, DB db) throws RemoteException {
+    public GameFactoryImpl(Channel chan, DB db) throws RemoteException {
         this(db);
-        this.conn = conn;
+        this.chan = chan;
     }
 
     @Override
     public GameSessionRI login(String username, String secret) throws RemoteException {
         User u = this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
         GameSession session =
-            new GameSession(this.conn, u, this.lobbies);
+            new GameSession(this.chan, u, this.lobbies);
         return session;
     }
 
@@ -52,7 +52,7 @@ public class GameFactoryImpl extends UnicastRemoteObject implements GameFactoryR
     public GameSessionRI register(String username, String secret) throws RemoteException {
         User u = this.db.insert(username, secret).orElseThrow(RemoteUserAlreadyRegisteredException::new);
         GameSession session =
-            new GameSession(this.conn, u, this.lobbies);
+            new GameSession(this.chan, u, this.lobbies);
         return session;
     }
 

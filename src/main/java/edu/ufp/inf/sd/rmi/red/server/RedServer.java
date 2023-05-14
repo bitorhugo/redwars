@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -32,6 +33,7 @@ import com.rabbitmq.client.ConnectionFactory;
 public class RedServer {
 
     private Connection conn;
+    private Channel chan;
     private SetupContextRMI contextRMI;
     private GameFactoryRI gameFactoryStub;
 
@@ -54,22 +56,14 @@ public class RedServer {
         }
     }
 
-    private void lookupCluster() {
-        try {
-            this.contextRMI.getRegistry().lookup("ClusterService");
-        } catch (RemoteException | NotBoundException e) {
-            System.out.println("INFO: Cluster Service not Bound");
-            System.out.println("INFO: Creating cluster...");
-            rebindService("Cluster");
-        }
-    }
-
     private void connectRabbitServices (String host) {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);
         try {
             this.conn = factory.newConnection();
-            System.out.println("INFO: Connection created " + conn);
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "RabbitMQ [x] Connection Established");
+            this.chan = this.conn.createChannel();
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "RabbitMQ [x] Channel Created");
         } catch (IOException | TimeoutException e) {
             System.err.println("ERROR: Not able to open connection with RabbitMQ Services");
         }
@@ -78,7 +72,7 @@ public class RedServer {
     private void rebindService(String serviceNameOnRegistry) {
         try {
             if (this.contextRMI.getRegistry() != null) {
-                this.gameFactoryStub = new GameFactoryImpl(this.conn, new DB("/home/bitor/projects/redwars/main.db"));
+                this.gameFactoryStub = new GameFactoryImpl(this.chan, new DB("/home/bitor/projects/redwars/main.db"));
                 //============ Rebind servant ============
                 this.contextRMI.getRegistry().rebind(serviceNameOnRegistry, this.gameFactoryStub);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "service {0} bound and running. :)", serviceNameOnRegistry);
@@ -96,7 +90,6 @@ public class RedServer {
             System.exit(-1);
         }
         RedServer red = new RedServer(args);
-        red.lookupCluster();
         red.connectRabbitServices(args[0]);
         red.rebindService("GameFactory");
     }

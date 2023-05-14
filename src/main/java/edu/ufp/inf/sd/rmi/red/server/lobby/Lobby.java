@@ -16,18 +16,16 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 
 import edu.ufp.inf.sd.rmi.red.client.ObserverRI;
-import edu.ufp.inf.sd.rmi.red.server.tokenring.RemoteNotCurrentTokenHolderException;
 import edu.ufp.inf.sd.rmi.red.server.tokenring.TokenRing;
 
 public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
+    private Channel chan;
+
     // client -> server channel
-    private Connection conn;
-    private Channel consumeChannel;
     private String WQ_QUEUE_NAME;
 
     // server -> client channel
-    private Channel publishChannel;
     private String FANOUT_EXCHANGE_NAME;
     private final static String FANOUT_EXCHANGE_TYPE = "fanout";
     
@@ -37,14 +35,10 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     private String mapname;
     private TokenRing ring;
 
-    public Lobby(Connection conn, String mapname, String username) throws RemoteException {
+    public Lobby(Channel chan, String mapname, String username) throws RemoteException {
         this(mapname, username);
-
-        this.conn = conn;
-        
-        // create consume channel
+        this.chan = chan;
         this.WQ_QUEUE_NAME = this.id.toString();
-        this.consumeChannel = this.createConsumeChannel(conn).orElseThrow();
     }
     
     public Lobby(String mapname, String username) throws RemoteException {
@@ -52,19 +46,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         this.id = UUID.randomUUID();
         this.mapname = mapname;
     }
-
-    public Channel getPublishChannel() {
-        return this.publishChannel;
-    }
-
-    public Channel getConsumeChannel() {
-        return this.consumeChannel;
-    }
-
-    public Connection getConnection() {
-        return this.conn;
-    }
-
+    
     @Override
     public String getQeueuName() throws RemoteException {
         return this.WQ_QUEUE_NAME;
@@ -113,7 +95,6 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
             // create publish channel
             this.FANOUT_EXCHANGE_NAME = this.id.toString();
-            this.publishChannel = this.createPublishChannel(this.conn).orElseThrow();
             this.notifyStartGame();
         }
     }
@@ -183,7 +164,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
     private void listenStateChanges() {
         try {
-            this.consumeChannel.queueDeclare(this.WQ_QUEUE_NAME, false, false, false, null);
+            this.chan.queueDeclare(this.WQ_QUEUE_NAME, false, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
             
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -197,14 +178,14 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
 
                 if (this.ring.getTokenHolder() == obs) { // check to see if message comes from token holder
                     // send command to all clients
-                    this.publishChannel.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
+                    this.chan.basicPublish(FANOUT_EXCHANGE_NAME, "", null, msg.getBytes("UTF-8"));
 
                     if (msg.compareTo("endturn") == 0) {
                         this.ring.passToken();
                     }
                 }
             };
-            this.consumeChannel.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+            this.chan.basicConsume(this.WQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -224,31 +205,6 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         throw new RemoteNotEnoughPlayersException("Not enough Players");
     }
 
-    public Optional<Channel> createConsumeChannel(Connection conn) {
-        Channel chan;
-        try {
-            chan = conn.createChannel();
-            System.out.println("INFO: Consume Channel created " + chan);
-        } catch(IOException e) {
-            chan = null;
-            System.err.println("Not able to open channel for RabbitMQ");
-        }
-        return Optional.ofNullable(chan);
-    }
-
-    public Optional<Channel> createPublishChannel(Connection conn) {
-        Channel chan;
-        try {
-            chan = conn.createChannel();
-            chan.exchangeDeclare(FANOUT_EXCHANGE_NAME, FANOUT_EXCHANGE_TYPE);
-        } catch (IOException e) {
-            chan = null;
-            System.err.println("Not able to open channel for RabbitMQ");
-        }
-        System.out.println("INFO: Publish Channel created " + chan);
-        return Optional.ofNullable(chan);
-    }
-
     public void closeChannel(Channel chan) {
         try {
             chan.close();
@@ -258,14 +214,4 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         }
     }
 
-    public void closeConnection(Connection conn) {
-        try {
-            conn.close();
-            System.out.println("INFO: Connection closed " + conn);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }    
-
-    
 }
