@@ -17,7 +17,7 @@ import menus.MenuHandler;
 public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
 
     private Connection conn; // connection for rabbit
-    private Channel channel; // channel for rabbit work qeueu
+    private Channel channel; // channel for rabbit work queue
     private String WQ_QUEUE_NAME;
     
     private String username;
@@ -66,10 +66,6 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
     public SubjectRI getSubject() {
         return this.subject;
     }
-
-    // public String getLastObserverState() throws RemoteException {
-    //     return this.subject.getSate();
-    // }
 
     private void bindQueue() {
         // create a connection and channel to bind to work queue
