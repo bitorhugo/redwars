@@ -9,7 +9,6 @@ import java.util.UUID;
 
 import javax.swing.JFrame;
 
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 
@@ -17,7 +16,7 @@ import edu.ufp.inf.sd.rmi.red.client.ObserverImpl;
 import edu.ufp.inf.sd.rmi.red.server.gamefactory.GameFactoryRI;
 import edu.ufp.inf.sd.rmi.red.server.gamesession.GameSessionRI;
 import edu.ufp.inf.sd.rmi.red.server.lobby.SubjectRI;
-import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
+
 import menus.MenuHandler;
 
 // export Game as UnicastRemoteObject
@@ -85,7 +84,6 @@ public class Game extends JFrame {
 
     public static String workQueueName = UUID.randomUUID().toString();
     public static String rpcStartGameGui = "rpc-start-game-gui-"; // name of the gui rpc
-    public static String rpc; // name of the gui rpc
     
 	public Game(Channel channel) {
         super (name);
@@ -118,8 +116,9 @@ public class Game extends JFrame {
 
     public static void rpcStartGame() {
         try {
-            chan.queueDeclare(rpc, false, false, false, null);
-            chan.queuePurge(rpc);
+            System.out.println("Declaring RPC [" + Game.rpcStartGameGui + "]");
+            chan.queueDeclare(Game.rpcStartGameGui, false, false, false, null);
+            chan.queuePurge(rpcStartGameGui);
 
             chan.basicQos(1);
 
@@ -151,7 +150,7 @@ public class Game extends JFrame {
                     System.out.println(" [.] " + e);
                 }
             };
-            chan.basicConsume(rpc, false, deliverCallback, (consumerTag -> {}));
+            chan.basicConsume(Game.rpcStartGameGui, false, deliverCallback, (consumerTag -> {}));
         } catch (IOException e) {
             e.printStackTrace();
         }                

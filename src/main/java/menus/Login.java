@@ -3,14 +3,19 @@ package menus;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.DeliverCallback;
 
 import edu.ufp.inf.sd.rmi.red.server.queuenames.exchange.ExchangeEnum;
+import edu.ufp.inf.sd.rmi.red.server.queuenames.rpc.RPCEnum;
 import engine.Game;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.awt.Point;
 
 public class Login implements ActionListener{
@@ -85,18 +90,18 @@ public class Login implements ActionListener{
         Object src = e.getSource();
 
         if (src == Login) {
-            String action = "login";
             String u = username.getText();
             String s = secret.getText();
-            this.handleMessages(action, u, s);
-            // try {
-            //     Game.session = Game.remoteService.login(u, s);
-            //     Game.u = u;
-            //     new StartMenu();
-            // } catch (RemoteException e1) {
-            //     String error = e1.getCause().toString();
-            //     Game.error.ShowError(error);
-            // }
+            try {
+                if (this.call(u, s).compareTo("ok") == 0) {
+                    Game.u = u;
+                    Game.rpcStartGameGui += Game.u;
+                    Game.rpcStartGame();
+                    new StartMenu();
+                }
+            } catch (IOException | InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+            }
         }
 
         if (src == Register) {
@@ -142,6 +147,37 @@ public class Login implements ActionListener{
     // @Override
     // public void keyTyped(KeyEvent arg0) {}
 
+    private String call(String username, String secret) throws IOException, InterruptedException, ExecutionException {
+
+        String credentials = username + ";" + secret;
+        
+        final String corrId = UUID.randomUUID().toString();
+        String replyQueueName = Game.chan.queueDeclare().getQueue();
+        AMQP.BasicProperties props = new AMQP.BasicProperties
+            .Builder()
+            .correlationId(corrId)
+            .replyTo(replyQueueName)
+            .build();
+
+        System.out.println("Sending [credentials] to server");
+        
+        Game.chan.basicPublish("", RPCEnum.RPC_LOGIN.getValue(), props, credentials.getBytes("UTF-8"));
+
+        final CompletableFuture<String> response = new CompletableFuture<>();
+
+        String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+                if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                    response.complete(new String(delivery.getBody(), "UTF-8"));
+                }
+            }, consumerTag -> {
+            });
+
+        String result = response.get();
+        Game.chan.basicCancel(ctag);
+        System.out.println("Received [" + result + "] from server");
+        return result;
+    }
+
     private void handleMessages(String action, String username, String secret) {
         try {
             // open queue for receiving response from server
@@ -153,7 +189,7 @@ public class Login implements ActionListener{
                 switch (response) {
                 case "ok":
                     Game.u = username;
-                    Game.rpc = Game.rpcStartGameGui + Game.u;
+                    Game.rpcStartGameGui += Game.u;
                     Game.rpcStartGame();
                     Game.chan.queueDelete(Game.u, false, false);
                     new StartMenu();
@@ -173,11 +209,7 @@ public class Login implements ActionListener{
 
             String credentials = username + ";" + secret;
             switch (action) {
-            case "login":
-                Game.chan.queueDeclare("login", false, false, false, null);
-                Game.chan.basicPublish("", "login", null, credentials.getBytes("UTF-8"));
-                System.out.println("INFO: Success! Message " + credentials + " sent to Login Queue.");
-                break;
+                
             case "register":
                 Game.chan.exchangeDeclare(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "fanout");
                 Game.chan.basicPublish(ExchangeEnum.AUTHEXCHANGENAME.getValue(), "", null, credentials.getBytes("UTF-8"));

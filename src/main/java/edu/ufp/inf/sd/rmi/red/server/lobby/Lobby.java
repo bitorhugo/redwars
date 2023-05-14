@@ -83,7 +83,6 @@ public class Lobby {
 
     public void startGame() throws IOException, InterruptedException, ExecutionException {
         if (this.check_requirements()) {
-            System.out.println("inside startGame sdsadasda");
 
             this.ring = new TokenRing(Clock.systemUTC(), this.players.size());
             
@@ -102,6 +101,7 @@ public class Lobby {
         this.players.forEach(p -> {
             try {
                 // get each clients rpc
+                System.out.println("Starting game for " + p);
                 String uniqueRPC = "rpc-start-game-gui-" + p;
                 
                 // send as params: mapname, list of each players commanders, work-queue name, fanout name

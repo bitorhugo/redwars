@@ -84,54 +84,34 @@ public class WaitQueueMenu implements ActionListener {
 
     private DefaultListModel<String> players() {
         DefaultListModel<String> pls = new DefaultListModel<>();
-        // try {
-        //     // open queue for receiving response from server
-        //     Game.chan.queueDeclare(Game.u, false, false, false, null);
-        //     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        //         String[] response = new String(delivery.getBody(), "UTF-8").split(";");
-        //         String status = response[0];
-        //         switch (status) {
-        //         case "ok":
-        //             for (int i = 1; i < response.length; ++i) {
-        //                 pls.addElement(response[i]);
-        //             }
-        //             Game.chan.queueDelete(Game.u); // maybe do not delete queue yet, since we may need it to initialize the game
-        //             break;
-        //         }
-        //     };
-        //     Game.chan.basicConsume(Game.u, true, deliverCallback, consumerTag -> { });
-            
-        //     // query the server for lobbies
-        //     Game.chan.queueDeclare("search_lobby", false, false, false, null);
-        //     String msg = "getPlayers" + ";" + Game.lobbyID + ";" + Game.u;
-        //     Game.chan.basicPublish("", "search_lobby", null, msg.getBytes("UTF-8"));
 
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
-        
-        // try {
-        //     this.call();
-        // } catch (IOException | InterruptedException | ExecutionException e) {
-        //     e.printStackTrace();
-        // }
-        
+        try {
+            var response = this.call(RPCEnum.RPC_GET_PLAYERS).split(";");
+            for (int i = 0; i < response.length; ++i) {
+                pls.addElement(response[i]);
+            }            
+        } catch (IOException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
         return pls;
     }
 
-    private void call(RPCEnum rpc) throws IOException, InterruptedException, ExecutionException {
+    private String call(RPCEnum rpc) throws IOException, InterruptedException, ExecutionException {
+        String res = null;
         switch (rpc) {
             case RPC_GET_PLAYERS:
+                res = this.rpcGetPlayers();
                 break;
             case RPC_START_GAME:
-                this.rpcStartGame();
+                res = this.rpcStartGame();
                 break;
             default:
                 break;
         }
+        return res;
     }
 
-    private void rpcStartGame() throws IOException, InterruptedException, ExecutionException {
+    private String rpcStartGame() throws IOException, InterruptedException, ExecutionException {
         String param = Game.u;
             
         final String corrId = UUID.randomUUID().toString();
@@ -143,34 +123,36 @@ public class WaitQueueMenu implements ActionListener {
             .build();
         System.out.println("sending [x]" + param);
         Game.chan.basicPublish("", RPCEnum.RPC_START_GAME.getValue(), props, param.getBytes("UTF-8"));
+
+        return null;
     }
     
-    // private String rpcGetPlayers() throws IOException, InterruptedException, ExecutionException {
-    //     String param = "";
+    private String rpcGetPlayers() throws IOException, InterruptedException, ExecutionException {
+        String param = Game.u;
             
-    //     final String corrId = UUID.randomUUID().toString();
-    //     String replyQueueName = Game.chan.queueDeclare().getQueue();
-    //     AMQP.BasicProperties props = new AMQP.BasicProperties
-    //         .Builder()
-    //         .correlationId(corrId)
-    //         .replyTo(replyQueueName)
-    //         .build();
+        final String corrId = UUID.randomUUID().toString();
+        String replyQueueName = Game.chan.queueDeclare().getQueue();
+        AMQP.BasicProperties props = new AMQP.BasicProperties
+            .Builder()
+            .correlationId(corrId)
+            .replyTo(replyQueueName)
+            .build();
 
-    //     Game.chan.basicPublish("", RPCEnum.RPC_GET_PLAYERS.getValue(), props, param.getBytes("UTF-8"));
+        Game.chan.basicPublish("", RPCEnum.RPC_GET_PLAYERS.getValue(), props, param.getBytes("UTF-8"));
 
-    //     final CompletableFuture<String> response = new CompletableFuture<>();
+        final CompletableFuture<String> response = new CompletableFuture<>();
 
-    //     String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
-    //             if (delivery.getProperties().getCorrelationId().equals(corrId)) {
-    //                 response.complete(new String(delivery.getBody(), "UTF-8"));
-    //             }
-    //         }, consumerTag -> {
-    //         });
+        String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+                if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                    response.complete(new String(delivery.getBody(), "UTF-8"));
+                }
+            }, consumerTag -> {
+            });
 
-    //     String result = response.get();
-    //     Game.chan.basicCancel(ctag);
-    //     return result;
-    // }
+        String result = response.get();
+        Game.chan.basicCancel(ctag);
+        return result;
+    }
  
     @Override
     public void actionPerformed(ActionEvent e) {

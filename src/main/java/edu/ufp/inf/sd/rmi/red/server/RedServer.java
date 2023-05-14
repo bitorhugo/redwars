@@ -95,9 +95,8 @@ public class RedServer {
             DeliverCallback deliverCallbackFanout = (consumerTag, delivery) -> {
                 String[] message = new String(delivery.getBody(), "UTF-8").split(";");
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "EXCHANGE AUTH: Received {0}", Arrays.asList(message));
-
                 try {
-                    this.handleAuth("register", message[0], message[1]);
+                    this.handleAuth("register", message[0], message[1]); // register;username;secret
                 } catch (RemoteUserNotFoundException | RemoteUserAlreadyRegisteredException e) {
                     e.printStackTrace();
                 }
@@ -281,8 +280,9 @@ public class RedServer {
                     String []cred = new String(delivery.getBody(), "UTF-8").split(";");
                     String username = cred[0];
                     String secret = cred[1];
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for {0} lobbies");
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for user: {0}", username);
                     this.db.select(username, secret).orElseThrow(RemoteUserNotFoundException::new);
+                    response += "ok";
                 } catch (RuntimeException e) {
                     System.out.println(" [.] " + e);
                 } finally {
@@ -309,9 +309,19 @@ public class RedServer {
 
                 String response = "";
                 try {
-                    String x = new String(delivery.getBody(), "UTF-8");
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Searching for {0} lobbies");
+                    String username = new String(delivery.getBody(), "UTF-8");
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Retrieving players from lobby where username {0} is inside", username);
+                    var lobby = this.lobbies.entrySet().stream()
+                        .filter(set -> {
+                                return set.getValue().containsPlayer(username);
+                            })
+                        .map(e -> e.getValue())
+                        .collect(Collectors.toList()).get(0);
 
+                    for (var p : lobby.getPlayers()) {
+                        response += p + ";";
+                    }
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Sending {0}", response);
                 } catch (RuntimeException e) {
                     System.out.println(" [.] " + e);
                 } finally {
@@ -351,7 +361,6 @@ public class RedServer {
             e.printStackTrace();
         }                
     }
-
     
     public static void main(String[] args) {
         if (args != null && args.length < 3) {
