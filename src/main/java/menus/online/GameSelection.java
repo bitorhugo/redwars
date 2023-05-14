@@ -169,9 +169,9 @@ public class GameSelection implements ActionListener {
             String msg = "join" + ";" + id  + ";" + Game.u;
             Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
             System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
-
             new WaitQueueMenu();
             } catch (Exception e1) {
+                e1.printStackTrace();
             }
         }
         

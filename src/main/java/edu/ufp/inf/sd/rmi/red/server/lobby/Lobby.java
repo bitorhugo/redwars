@@ -5,6 +5,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import com.rabbitmq.client.AMQP;
@@ -114,7 +115,21 @@ public class Lobby {
                         .replyTo(replyQueueName)
                         .build();
                 chan.basicPublish("", uniqueRPC, props, params.getBytes("UTF-8"));
-            } catch (IOException e) {e.printStackTrace();}
+                
+                final CompletableFuture<String> response = new CompletableFuture<>();
+
+                String ctag = this.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+                        if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                            response.complete(new String(delivery.getBody(), "UTF-8"));
+                        }
+                    }, consumerTag -> {
+                    });
+
+                this.chan.basicCancel(ctag);
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+            } 
         });
     }
 

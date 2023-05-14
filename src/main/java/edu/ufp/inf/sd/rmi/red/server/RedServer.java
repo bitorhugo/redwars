@@ -195,31 +195,29 @@ public class RedServer {
                 .map(e -> e.getValue())
                 .collect(Collectors.toList());
             l = lobbies1.get(0);
-            if (l.playerCount() == 1) {
-                var params = new String[] { "delete", username };
-                this.handleLobbies(params);
-            }
-            else {
-                l.removePlayer(username);
-            }
+            l.removePlayer(username);
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Player {0} removed",
-                    username);
+                                                            username);
+            if (l.playerCount() == 0) {
+                this.lobbies.remove(l.getID());
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed",
+                                                                l.getID());
+            }
             break;
-            
-        case "delete":
-            System.out.println("delete");
-            username = message[1];
-            String u = username;
-            var lobbies = this.lobbies.entrySet().stream()
-                .filter(set -> {
-                        return set.getValue().containsPlayer(u);
-                    })
-                .map(e -> e.getValue())
-                .collect(Collectors.toList());
-            l = lobbies.get(0);
-            this.lobbies.remove(l.getID());
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", l.getID());
-            break;
+        // case "delete":
+        //     System.out.println("delete");
+        //     username = message[1];
+        //     String u = username;
+        //     var lobbies = this.lobbies.entrySet().stream()
+        //         .filter(set -> {
+        //                 return set.getValue().containsPlayer(u);
+        //             })
+        //         .map(e -> e.getValue())
+        //         .collect(Collectors.toList());
+        //     l = lobbies.get(0);
+        //     this.lobbies.remove(l.getID());
+        //     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", l.getID());
+        //     break;
         }
     }
 
@@ -341,19 +339,28 @@ public class RedServer {
             this.chan.basicQos(1);
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                    .Builder()
+                    .correlationId(delivery.getProperties().getCorrelationId())
+                    .build();
+
+                String response = "";
                 try {
                     String username = new String(delivery.getBody(), "UTF-8");
-                    System.out.println("Received [x] " + username);
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Received {0}", username);
                     var lobby = this.lobbies.entrySet().stream()
                         .filter(set -> {
                                 return set.getValue().containsPlayer(username);
                             })
                         .map(e -> e.getValue())
                         .collect(Collectors.toList()).get(0);
-                    System.out.println("Starting game");
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Starting game for {0}", lobby.getPlayers());
                     lobby.startGame(); // start game for all clients
                 } catch (RuntimeException | InterruptedException | ExecutionException e) {
                     System.out.println(" [.] " + e);
+                } finally {
+                    this.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                    this.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 }
             };
             this.chan.basicConsume(RPCEnum.RPC_START_GAME.getValue(), false, deliverCallback, (consumerTag -> {}));

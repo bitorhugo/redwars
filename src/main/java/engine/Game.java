@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.swing.JFrame;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 
@@ -123,6 +124,12 @@ public class Game extends JFrame {
             chan.basicQos(1);
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                    .Builder()
+                    .correlationId(delivery.getProperties().getCorrelationId())
+                    .build();
+                String response = "";
+                
                 try {
                     String []args = new String(delivery.getBody(), "UTF-8").split(";");
                     System.out.println("Received [x] " + args[1]);
@@ -148,6 +155,9 @@ public class Game extends JFrame {
              
                 } catch (RuntimeException e) {
                     System.out.println(" [.] " + e);
+                } finally {
+                    Game.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                    Game.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 }
             };
             chan.basicConsume(Game.rpcStartGameGui, false, deliverCallback, (consumerTag -> {}));

@@ -111,7 +111,7 @@ public class WaitQueueMenu implements ActionListener {
         return res;
     }
 
-    private String rpcStartGame() throws IOException, InterruptedException, ExecutionException {
+    private String rpcStartGame() throws IOException {
         String param = Game.u;
             
         final String corrId = UUID.randomUUID().toString();
@@ -121,10 +121,21 @@ public class WaitQueueMenu implements ActionListener {
             .correlationId(corrId)
             .replyTo(replyQueueName)
             .build();
-        System.out.println("sending [x]" + param);
         Game.chan.basicPublish("", RPCEnum.RPC_START_GAME.getValue(), props, param.getBytes("UTF-8"));
+        System.out.println("Sent [x]" + param + " to " + RPCEnum.RPC_START_GAME.getValue());
 
-        return null;
+        final CompletableFuture<String> response = new CompletableFuture<>();
+
+        String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+            if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                response.complete(new String(delivery.getBody(), "UTF-8"));
+            }
+        }, consumerTag -> {
+        });
+
+        // String result = response.get();
+        Game.chan.basicCancel(ctag);
+        return "";
     }
     
     private String rpcGetPlayers() throws IOException, InterruptedException, ExecutionException {
