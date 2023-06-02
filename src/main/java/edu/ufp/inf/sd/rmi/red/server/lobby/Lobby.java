@@ -17,12 +17,21 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     private List<ObserverRI> observers = Collections.synchronizedList(new ArrayList<>());
     private String state;
     private String mapname;
+    private int maxPlayers;
+    private boolean isRunning;
     private TokenRing ring;
     
     public Lobby(String mapname, String username) throws RemoteException {
         super();
         this.id = UUID.randomUUID();
         this.mapname = mapname;
+        if (this.mapname.compareTo("FourCorners") == 0) {
+            this.maxPlayers = 4;
+        }
+        else {
+            this.maxPlayers = 2;
+        }
+        this.isRunning = false;
     }
 
     @Override
@@ -45,6 +54,16 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
     }
 
     @Override
+    public boolean isFull() throws RemoteException {
+        return this.observers.size() >= this.maxPlayers;
+    }
+
+    @Override
+    public boolean isRunning() throws RemoteException {
+        return this.isRunning;
+    }
+
+    @Override
     public void attach(ObserverRI obs) throws RemoteException {
         this.observers.add(obs);
         System.out.println("INFO: " + obs + " added");
@@ -63,6 +82,7 @@ public class Lobby extends UnicastRemoteObject implements SubjectRI {
         if (this.check_requirements()) {
             System.out.println("INFO: Starting game");
             this.ring = new TokenRing(Clock.systemUTC(), this.observers.size()); // initialize token ring
+            this.isRunning = true;
             this.notifyStartGame();
         }
     }

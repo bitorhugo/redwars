@@ -59,7 +59,6 @@ public class Pause implements ActionListener {
             try {
                 Game.lobby.detach(Game.obs);
                 if (Game.lobby.players().size() == 0) {
-                    //TODO: handle deletion of lobby in server
                     Game.session.deleteLobby(Game.lobby.getID());
                 }
             } catch (RemoteException e1) {

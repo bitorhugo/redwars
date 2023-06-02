@@ -11,12 +11,15 @@ public interface SubjectRI extends Remote {
     public List<ObserverRI> players() throws RemoteException;
     public UUID getID() throws RemoteException;
     public String getMapname() throws RemoteException;
+
+    public boolean isFull() throws RemoteException;
+    public boolean isRunning() throws RemoteException;
     
     public void attach(ObserverRI obs) throws RemoteException;
     public void detach(ObserverRI obs) throws RemoteException;
 
     public void startGame() throws RemoteException;
-    
+
     public void setSate(String state, ObserverRI obs) throws RemoteException;
     public void setSate(String state) throws RemoteException;
     public String getSate() throws RemoteException;

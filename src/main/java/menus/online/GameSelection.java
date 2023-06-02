@@ -124,15 +124,24 @@ public class GameSelection implements ActionListener {
             try {
                 String selected = this.availableGamesList.getSelectedValue();
                 UUID l = this.lobbyNames.get(selected).getID();                // get value from scroll pane
-                Game.lobby = Game.session.lobby(l);
-                System.out.println("INFO: Selected lobby " + Game.lobby);
-                Game.obs = new ObserverImpl(Game.u, Game.cmd, Game.lobby, Game.g);
-                Game.lobby.attach(Game.obs);
-                new WaitQueueMenu();
+
+                var lobby = Game.session.lobby(l);
+                if (!lobby.isFull() && !lobby.isRunning()) {
+                    Game.lobby = Game.session.lobby(l);
+                    System.out.println("INFO: Selected lobby " + Game.lobby);
+                    Game.obs = new ObserverImpl(Game.u, Game.cmd, Game.lobby, Game.g);
+                    Game.lobby.attach(Game.obs);
+                    new WaitQueueMenu();                    
+                }
+                else {
+                    Game.error.ShowError("Lobby is Full");
+                }
+                
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
         }
+        
         if (s == this.Refresh) {
             new GameSelection(mapname);
         }
