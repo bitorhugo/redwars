@@ -18,6 +18,7 @@ public class Lobby {
 
     private String id;
     private String mapname;
+    private int maxPlayers;
     private List<String> players = new ArrayList<>();
 
     private transient TokenRing ring;
@@ -30,6 +31,12 @@ public class Lobby {
         super();
         this.id = String.valueOf(lobbyID);
         this.mapname = mapname;
+        if (this.mapname.compareTo("FourCorners") == 0) {
+            this.maxPlayers = 4;
+        }
+        else {
+            this.maxPlayers = 2;
+        }
     }
 
     public Lobby(Channel chan, String mapname, int lobbyID) {
@@ -66,7 +73,15 @@ public class Lobby {
     }
 
     public void addPlayer(String username) {
-        this.players.add(username);
+        if (this.playerCount() < this.maxPlayers) {
+            this.players.add(username);
+        }
+    }
+
+    public boolean isFull() {
+        return this.playerCount() < this.maxPlayers
+            ? false
+            : true;
     }
 
     public void removePlayer(String username) {

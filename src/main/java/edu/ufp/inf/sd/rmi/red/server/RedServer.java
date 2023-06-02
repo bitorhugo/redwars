@@ -126,6 +126,7 @@ public class RedServer {
             this.searchLobbiesRPC();
             this.getPlayersRPC();
             this.startGameRPC();
+            this.checkLobbyFullRPC();
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -204,20 +205,6 @@ public class RedServer {
                                                                 l.getID());
             }
             break;
-        // case "delete":
-        //     System.out.println("delete");
-        //     username = message[1];
-        //     String u = username;
-        //     var lobbies = this.lobbies.entrySet().stream()
-        //         .filter(set -> {
-        //                 return set.getValue().containsPlayer(u);
-        //             })
-        //         .map(e -> e.getValue())
-        //         .collect(Collectors.toList());
-        //     l = lobbies.get(0);
-        //     this.lobbies.remove(l.getID());
-        //     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Lobby {0} removed", l.getID());
-        //     break;
         }
     }
 
@@ -328,6 +315,39 @@ public class RedServer {
                 }
             };
             this.chan.basicConsume(RPCEnum.RPC_GET_PLAYERS.getValue(), false, deliverCallback, (consumerTag -> {}));
+        } catch (Exception e) {}        
+    }
+
+    private void checkLobbyFullRPC() {
+        try {
+            this.chan.queueDeclare(RPCEnum.RPC_CHECK_LOBBY_FULL.getValue(), false, false, false, null);
+            this.chan.queuePurge(RPCEnum.RPC_CHECK_LOBBY_FULL.getValue());
+
+            this.chan.basicQos(1);
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(delivery.getProperties().getCorrelationId())
+                .build();
+
+                String response = "";
+                try {
+                    String lobbyID = new String(delivery.getBody(), "UTF-8");
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Checking lobby ", lobbyID);
+
+                    if (!this.lobbies.get(lobbyID).isFull()) {
+                        response += "ok";
+                    }
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Sending {0}", response);
+                } catch (RuntimeException e) {
+                    System.out.println(" [.] " + e);
+                } finally {
+                    this.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                    this.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                }
+            };
+            this.chan.basicConsume(RPCEnum.RPC_CHECK_LOBBY_FULL.getValue(), false, deliverCallback, (consumerTag -> {}));
         } catch (Exception e) {}        
     }
 

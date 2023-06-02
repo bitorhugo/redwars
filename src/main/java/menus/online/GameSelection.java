@@ -151,6 +151,32 @@ public class GameSelection implements ActionListener {
             Game.chan.basicCancel(ctag);
             return result;
     }
+
+    public String call(String params) throws IOException, InterruptedException, ExecutionException {
+        final String corrId = UUID.randomUUID().toString();
+
+        String replyQueueName = Game.chan.queueDeclare().getQueue();
+        AMQP.BasicProperties props = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(corrId)
+                .replyTo(replyQueueName)
+                .build();
+
+        Game.chan.basicPublish("", RPCEnum.RPC_CHECK_LOBBY_FULL.getValue(), props, params.getBytes("UTF-8"));
+
+        final CompletableFuture<String> response = new CompletableFuture<>();
+
+        String ctag = Game.chan.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+            if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                response.complete(new String(delivery.getBody(), "UTF-8"));
+            }
+        }, consumerTag -> {
+        });
+
+        String result = response.get();
+        Game.chan.basicCancel(ctag);
+        return result;
+    }
     
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -165,11 +191,18 @@ public class GameSelection implements ActionListener {
             try {
             String selected = this.availableGamesList.getSelectedValue();
             var id = this.lobbiesNames.get(selected);
-            Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
-            String msg = "join" + ";" + id  + ";" + Game.u;
-            Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
-            System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
-            new WaitQueueMenu();
+            String params = id;
+            if (this.call(params).compareTo("ok") != 0) { // exceptions, lobby is full
+                Game.error.ShowError("Lobby is Full!");    
+            }
+            else {
+                String msg = "join" + ";" + id + ";" + Game.u;
+                Game.chan.exchangeDeclare(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "fanout");
+                Game.chan.basicPublish(ExchangeEnum.LOBBIESEXCHANGENAME.getValue(), "", null, msg.getBytes("UTF-8"));
+                System.out.println("INFO: Success! Message " + msg + " sent to Exchange LOBBIES.");
+                new WaitQueueMenu();
+            }
+            
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -179,5 +212,7 @@ public class GameSelection implements ActionListener {
             new GameSelection(mapname);
         }
     }
-    
+
+
+
 }
