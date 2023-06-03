@@ -335,8 +335,8 @@ public class RedServer {
                 try {
                     String lobbyID = new String(delivery.getBody(), "UTF-8");
                     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Checking lobby ", lobbyID);
-
-                    if (!this.lobbies.get(lobbyID).isFull()) {
+                    var lobby = this.lobbies.get(lobbyID);
+                    if (!lobby.isFull() && !lobby.isRunning()) {
                         response += "ok";
                     }
                     Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Sending {0}", response);

@@ -19,6 +19,7 @@ public class Lobby {
     private String id;
     private String mapname;
     private int maxPlayers;
+    private boolean isRunning = false;
     private List<String> players = new ArrayList<>();
 
     private transient TokenRing ring;
@@ -79,9 +80,11 @@ public class Lobby {
     }
 
     public boolean isFull() {
-        return this.playerCount() < this.maxPlayers
-            ? false
-            : true;
+        return this.playerCount() >= this.maxPlayers;
+    }
+
+    public boolean isRunning() {
+        return this.isRunning;
     }
 
     public void removePlayer(String username) {
@@ -100,6 +103,8 @@ public class Lobby {
     public void startGame() throws IOException, InterruptedException, ExecutionException {
         if (this.check_requirements()) {
 
+            this.isRunning = true;
+            
             this.ring = new TokenRing(Clock.systemUTC(), this.players.size());
             
             // declare work queue that server will consume from
